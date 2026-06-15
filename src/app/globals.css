@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand — primary #007bff */
+  --color-primary: #007bff;
+  --color-primary-hover: #0069d9;
+  --color-primary-muted: #e7f1ff;
+  --color-primary-border: #b8daff;
+  --color-primary-ring: #66b0ff;
+
+  /* Semantic — use sparingly */
+  --color-success: #15803d;
+  --color-success-light: #f0fdf4;
+  --color-success-border: #bbf7d0;
+
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-danger-light: #fef2f2;
+  --color-danger-border: #fecaca;
+
+  --color-warning: #b45309;
+  --color-warning-light: #fffbeb;
+  --color-warning-border: #fde68a;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-medium transition-colors hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply text-primary border border-primary-border bg-white hover:bg-primary-muted transition-colors;
+  }
+
+  .btn-danger {
+    @apply bg-danger text-white font-medium transition-colors hover:bg-danger-hover;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+
+  .link-primary {
+    @apply text-primary hover:underline;
+  }
+
+  .alert-success {
+    @apply bg-success-light border border-success-border text-success text-sm px-4 py-2 rounded-lg;
+  }
+
+  .alert-danger {
+    @apply bg-danger-light border border-danger-border text-danger text-sm px-4 py-2 rounded-lg;
+  }
+
+  .alert-warning {
+    @apply bg-warning-light border border-warning-border text-warning text-sm px-3 py-2 rounded-lg;
+  }
+
+  .badge-primary {
+    @apply bg-primary-muted text-primary text-xs px-2 py-0.5 rounded-full;
+  }
+
+  .panel-primary {
+    @apply bg-primary-muted border border-primary-border;
+  }
+
+  .nav-active {
+    @apply bg-primary-muted text-primary font-medium;
+  }
+}
