@@ -1,4 +1,11 @@
+import {
+  uploadFormData,
+  type UploadProgressHandler,
+} from '@/lib/uploadFormData';
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+export type { UploadProgressHandler };
 
 /** Keep in sync with backend UPLOAD_MAX_IMAGE_MB (default 10). */
 export const MAX_IMAGE_UPLOAD_MB = parseInt(process.env.NEXT_PUBLIC_UPLOAD_MAX_IMAGE_MB || '10', 10);
@@ -28,6 +35,13 @@ export type Employee = {
   updated_at: string;
 };
 
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+};
+
 export type EmployeeListParams = {
   entity_type?: string;
   entity_id?: string;
@@ -37,6 +51,31 @@ export type EmployeeListParams = {
   page?: number;
   limit?: number;
 };
+
+export type UserListParams = {
+  search?: string;
+  role?: string;
+  is_active?: boolean;
+  page?: number;
+  limit?: number;
+};
+
+export type RoleListParams = {
+  search?: string;
+  is_system?: boolean;
+  page?: number;
+  limit?: number;
+};
+
+function buildQueryString(params: Record<string, string | number | boolean | undefined>): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') qs.set(key, String(value));
+  }
+  const q = qs.toString();
+  return q ? `?${q}` : '';
+}
+
 export const MAX_EMPLOYEE_CSV_UPLOAD_MB = parseInt(process.env.NEXT_PUBLIC_UPLOAD_MAX_CSV_MB || '2', 10);
 export const MAX_EMPLOYEE_CSV_UPLOAD_BYTES = MAX_EMPLOYEE_CSV_UPLOAD_MB * 1024 * 1024;
 
@@ -85,7 +124,7 @@ function logoutAndRedirect(reason: string): never {
 
 function rejectIfUnauthorized(
   path: string,
-  res: Response,
+  res: Response | { status: number },
   data: { error?: string } = {},
 ): void {
   if (path === '/auth/login' || (res.status !== 401 && res.status !== 403)) return;
@@ -111,12 +150,21 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   return data;
 }
 
+/** True when the URL is an S3 (or compatible) presigned URL — extra query params break the signature. */
+function isPresignedObjectUrl(url: string): boolean {
+  return url.includes('X-Amz-Signature=') || url.includes('X-Amz-Algorithm=');
+}
+
 export function mediaSrc(url: string | null | undefined, cacheVersion?: number): string | null {
   if (!url) return null;
   const base = url.startsWith('http') ? url : `${BASE}${url}`;
-  if (!cacheVersion) return base;
-  const sep = base.includes('?') ? '&' : '?';
-  return `${base}${sep}v=${cacheVersion}`;
+  // Presigned URLs must not get extra query params — S3 returns 403 (signature mismatch).
+  // React `key` props on <img> handle cache busting when the URL or version changes.
+  if (cacheVersion && !isPresignedObjectUrl(base)) {
+    const sep = base.includes('?') ? '&' : '?';
+    return `${base}${sep}v=${cacheVersion}`;
+  }
+  return base;
 }
 
 /** @deprecated use mediaSrc */
@@ -125,13 +173,16 @@ export const profileImageSrc = mediaSrc;
 export const api = {
   login:        (body: object)     => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   getPermissions: ()              => apiFetch('/auth/permissions'),
-  getUsers:   ()                   => apiFetch('/users'),
+  getUsers:   (params: UserListParams = {}) =>
+    apiFetch(`/users${buildQueryString(params)}`),
   getUser:    (id: string)         => apiFetch(`/users/${id}`),
   createUser: (body: object)       => apiFetch('/users', { method: 'POST', body: JSON.stringify(body) }),
   updateUser: (id: string, body: object) => apiFetch(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteUser: (id: string)         => apiFetch(`/users/${id}`, { method: 'DELETE' }),
   resetPassword: (id: string, body: object = {}) => apiFetch(`/users/${id}/reset-password`, { method: 'POST', body: JSON.stringify(body) }),
-  getRoles:   ()                   => apiFetch('/roles'),
+  getRoles:   (params: RoleListParams = {}) =>
+    apiFetch(`/roles${buildQueryString(params)}`),
+  getRolePermissions: (): Promise<{ permissions: string[] }> => apiFetch('/roles/permissions'),
   getAssignableRoles: (options?: { maxLevel?: number; entityType?: string }) => {
     const qs = new URLSearchParams();
     if (options?.maxLevel != null) qs.set('max_level', String(options.maxLevel));
@@ -145,28 +196,33 @@ export const api = {
   getUserRoles: (id: string)       => apiFetch(`/users/${id}/roles`),
   assignRole: (id: string, body: object) => apiFetch(`/users/${id}/roles`, { method: 'POST', body: JSON.stringify(body) }),
   removeRole: (userId: string, assignmentId: string) => apiFetch(`/users/${userId}/roles/${assignmentId}`, { method: 'DELETE' }),
-  uploadProfileImage: async (userId: string, file: File) => {
-    const token = getToken();
+  uploadProfileImage: async (
+    userId: string,
+    file: File,
+    options?: { onProgress?: UploadProgressHandler },
+  ) => {
+    const path = `/users/${userId}/profile-image`;
     const formData = new FormData();
     formData.append('image', file);
-    const res = await fetch(`${BASE}/users/${userId}/profile-image`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    });
-    const text = await res.text();
+    const { status, text } = await uploadFormData(path, formData, { onProgress: options?.onProgress });
     let data: { error?: string; profile_image_url?: string; user?: object } = {};
     try {
       data = text ? JSON.parse(text) : {};
     } catch {
       throw new Error(text || 'Upload failed');
     }
-    rejectIfUnauthorized(`/users/${userId}/profile-image`, res, data);
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    rejectIfUnauthorized(path, { status }, data);
+    if (status !== 200 && status !== 201) throw new Error(data.error || 'Upload failed');
+    options?.onProgress?.(100);
     if (!data.profile_image_url) throw new Error('Upload succeeded but no image URL was returned');
     return data as { profile_image_url: string; user?: object };
   },
-  uploadEntityImages: async (entityType: string, entityId: string, files: File[]) => {
+  uploadEntityImages: async (
+    entityType: string,
+    entityId: string,
+    files: File[],
+    options?: { onProgress?: UploadProgressHandler },
+  ) => {
     const pathSegment: Record<string, string> = {
       tower: 'towers', company: 'companies', organization: 'organizations', location: 'locations',
     };
@@ -174,33 +230,25 @@ export const api = {
     if (!segment) throw new Error(`Unknown entity type: ${entityType}`);
     if (!files.length) throw new Error('No images selected');
 
-    const token = getToken();
+    const path = `/entities/${segment}/${entityId}/image`;
     const formData = new FormData();
     files.forEach(file => formData.append('image', file));
-    const res = await fetch(`${BASE}/entities/${segment}/${entityId}/image`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    });
-    const data = await res.json();
-    rejectIfUnauthorized(`/entities/${segment}/${entityId}/image`, res, data);
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    const { status, text } = await uploadFormData(path, formData, { onProgress: options?.onProgress });
+    let data: { error?: string; image_url?: string } = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(text || 'Upload failed');
+    }
+    rejectIfUnauthorized(path, { status }, data);
+    if (status !== 200 && status !== 201) throw new Error(data.error || 'Upload failed');
+    options?.onProgress?.(100);
     return data;
   },
 
   // Entities
-  getEmployees: (params: EmployeeListParams = {}) => {
-    const qs = new URLSearchParams();
-    if (params.entity_type) qs.set('entity_type', params.entity_type);
-    if (params.entity_id) qs.set('entity_id', params.entity_id);
-    if (params.search) qs.set('search', params.search);
-    if (params.department) qs.set('department', params.department);
-    if (params.is_active !== undefined) qs.set('is_active', String(params.is_active));
-    if (params.page) qs.set('page', String(params.page));
-    if (params.limit) qs.set('limit', String(params.limit));
-    const q = qs.toString();
-    return apiFetch(`/employees${q ? `?${q}` : ''}`);
-  },
+  getEmployees: (params: EmployeeListParams = {}) =>
+    apiFetch(`/employees${buildQueryString(params)}`),
 
   getEmployee: (id: string) => apiFetch(`/employees/${id}`),
 
@@ -241,22 +289,26 @@ export const api = {
     const segment = pathSegment[entityType];
     if (!segment) throw new Error(`Unknown entity type: ${entityType}`);
 
+    const path = `/entities/${segment}/${entityId}/employees/csv`;
     const token = getToken();
     const formData = new FormData();
     formData.append('csv', file);
-    const res = await fetch(`${BASE}/entities/${segment}/${entityId}/employees/csv`, {
+    const res = await fetch(`${BASE}${path}`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
     });
     const data = await res.json().catch(() => ({}));
-    rejectIfUnauthorized(`/entities/${segment}/${entityId}/employees/csv`, res, data);
+    rejectIfUnauthorized(path, res, data);
     if (data.summary !== undefined) return data as EmployeeCsvImportResult;
     if (!res.ok) throw new Error(data.error || 'Import failed');
     return data as EmployeeCsvImportResult;
   },
 
-  getEntityImages: (entityType: string, entityId: string) => {
+  getEntityImages: (entityType: string, entityId: string): Promise<{
+    entity_name: string | null;
+    images: Array<{ id: string; image_url: string; created_at: string }>;
+  }> => {
     const segment: Record<string, string> = {
       tower: 'towers', company: 'companies', organization: 'organizations', location: 'locations',
     };

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { getUser } from '@/lib/auth';
+import Pagination from '@/components/Pagination';
 import FlashToast from '@/components/FlashToast';
 
 type User = { id: string; email: string; name: string; phone?: string; is_active: boolean; created_at: string; roles: Role[] };
@@ -17,6 +18,10 @@ export default function UsersPage() {
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
   useEffect(() => { setCurrentUserId(getUser()?.id); }, []);
   const [users, setUsers]     = useState<User[]>([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, total_pages: 0 });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [roleFilterOptions, setRoleFilterOptions] = useState<string[]>([]);
   const [assignableRoles, setAssignableRoles] = useState<RoleDef[]>([]);
   const [rolesLoading, setRolesLoading] = useState(false);
   const [maxAssignableLevel, setMaxAssignableLevel] = useState<number | null>(null);
@@ -37,13 +42,26 @@ export default function UsersPage() {
     role_name: '', scope_type: 'global' as ScopeType, scope_id: '',
   });
 
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filterRole, setFilterRole] = useState('');
+
   const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const u = await api.getUsers();
-      setUsers(u.users);
+      const params: Parameters<typeof api.getUsers>[0] = { page, limit };
+      if (search) params.search = search;
+      if (filterRole) params.role = filterRole;
+      if (filterStatus === 'active') params.is_active = true;
+      if (filterStatus === 'inactive') params.is_active = false;
+
+      const u = await api.getUsers(params);
+      setUsers(u.users ?? []);
+      setPagination(u.pagination ?? { page: 1, limit: 20, total: 0, total_pages: 0 });
     } catch { setError('Failed to load data'); }
     finally { setLoading(false); }
-  }, []);
+  }, [page, limit, search, filterStatus, filterRole]);
 
   const loadAssignableRoles = useCallback(async () => {
     setRolesLoading(true);
@@ -64,6 +82,21 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const t = setTimeout(() => { setSearch(searchInput); setPage(1); }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await api.getRoles({ limit: 100 });
+        const names = (r.roles ?? []).map((role: RoleDef) => role.display_name).sort();
+        setRoleFilterOptions(names);
+      } catch { /* non-fatal */ }
+    })();
+  }, []);
 
   useEffect(() => {
     if (showForm) loadAssignableRoles();
@@ -156,28 +189,10 @@ export default function UsersPage() {
   }
 
   const levelColor = (level: number) => {
-    if (level >= 800) return 'bg-red-100 text-red-700';
-    if (level >= 600) return 'bg-blue-100 text-blue-700';
-    if (level >= 400) return 'bg-amber-100 text-amber-700';
-    return 'bg-green-100 text-green-700';
+    if (level >= 1000) return 'bg-primary text-white';
+    if (level >= 400) return 'bg-primary-muted text-primary';
+    return 'bg-gray-100 text-gray-600';
   };
-
-  // ── Search & filter state ──────────────────────────────────────────────────
-  const [search, setSearch]         = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
-  const [filterRole, setFilterRole] = useState('');
-
-  const uniqueRoleNames = Array.from(new Set(users.flatMap(u => u.roles.map(r => r.display_name)))).sort();
-
-  const filtered = users.filter(u => {
-    const q = search.toLowerCase();
-    const matchSearch = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-    const matchStatus =
-      filterStatus === 'all' ? true :
-      filterStatus === 'active' ? u.is_active : !u.is_active;
-    const matchRole = !filterRole || u.roles.some(r => r.display_name === filterRole);
-    return matchSearch && matchStatus && matchRole;
-  });
 
   return (
     <div className="p-8">
@@ -185,14 +200,12 @@ export default function UsersPage() {
         <div>
           <h1 className="text-xl font-bold text-gray-900">Users</h1>
           <p className="text-sm text-gray-500">
-            {filtered.length === users.length
-              ? `${users.length} total`
-              : `${filtered.length} of ${users.length}`} users
+            {pagination.total} user{pagination.total === 1 ? '' : 's'} total
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors"
         >
           {showForm ? 'Cancel' : '+ Create User'}
         </button>
@@ -203,38 +216,39 @@ export default function UsersPage() {
         <div className="relative flex-1 max-w-sm">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
           <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
             placeholder="Search name or email…"
-            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          {search && (
-            <button onClick={() => setSearch('')}
+          {searchInput && (
+            <button onClick={() => setSearchInput('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
           )}
         </div>
 
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as typeof filterStatus)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value as typeof filterStatus); setPage(1); }}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white">
           <option value="all">All statuses</option>
           <option value="active">Active only</option>
           <option value="inactive">Inactive only</option>
         </select>
 
-        <select value={filterRole} onChange={e => setFilterRole(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        <select value={filterRole} onChange={e => { setFilterRole(e.target.value); setPage(1); }}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white">
           <option value="">All roles</option>
-          {uniqueRoleNames.map(r => <option key={r} value={r}>{r}</option>)}
+          {roleFilterOptions.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
 
-        {(search || filterStatus !== 'all' || filterRole) && (
-          <button onClick={() => { setSearch(''); setFilterStatus('all'); setFilterRole(''); }}
-            className="text-xs text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+        {(searchInput || filterStatus !== 'all' || filterRole) && (
+          <button onClick={() => { setSearchInput(''); setFilterStatus('all'); setFilterRole(''); setPage(1); }}
+            className="text-xs text-primary hover:bg-primary-muted px-3 py-2 rounded-lg border border-primary-border">
             Clear filters
           </button>
         )}
       </div>
 
+      
       {/* Create Form */}
       {showForm && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
@@ -243,25 +257,25 @@ export default function UsersPage() {
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Full Name *</label>
               <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="John Smith" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
               <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="john@company.com" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Password *</label>
               <input required type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Min 8 characters" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
               <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="+91 98765 43210" />
             </div>
             <div>
@@ -270,7 +284,7 @@ export default function UsersPage() {
                 value={form.role_name}
                 onChange={e => setForm({ ...form, role_name: e.target.value })}
                 disabled={rolesLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"
               >
                 <option value="">{rolesLoading ? 'Loading roles…' : '-- No role --'}</option>
                 {assignableRoles.map(r => (
@@ -283,14 +297,14 @@ export default function UsersPage() {
                 </p>
               )}
               {!rolesLoading && assignableRoles.length === 0 && (
-                <p className="text-xs text-amber-600 mt-0.5">No roles below your level are available to assign.</p>
+                <p className="text-xs text-warning mt-0.5">No roles below your level are available to assign.</p>
               )}
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Scope Type</label>
               <select value={form.scope_type} onChange={e => setScopeType(e.target.value as ScopeType)}
                 disabled={!form.role_name}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400">
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-400">
                 <option value="global">Global (everywhere)</option>
                 <option value="tower">Tower</option>
                 <option value="organization">Organization</option>
@@ -309,7 +323,7 @@ export default function UsersPage() {
                 </label>
                 <select required value={form.scope_id}
                   onChange={e => setForm({...form, scope_id: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                   <option value="">-- Select {form.scope_type} --</option>
                   {scopeOptions().map(o => (
                     <option key={o.id} value={o.id}>
@@ -320,7 +334,7 @@ export default function UsersPage() {
                   ))}
                 </select>
                 {scopeOptions().length === 0 && (
-                  <p className="text-xs text-amber-600 mt-0.5">
+                  <p className="text-xs text-warning mt-0.5">
                     No {form.scope_type}s exist yet. Create one on the Entities page first.
                   </p>
                 )}
@@ -332,7 +346,7 @@ export default function UsersPage() {
                 Cancel
               </button>
               <button type="submit"
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover">
                 Create User
               </button>
             </div>
@@ -359,7 +373,7 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map(u => {
+              {users.map(u => {
                 // Primary role = highest level; show "+N" if multiple
                 const sorted = [...u.roles].sort((a, b) => b.level - a.level);
                 const primary = sorted[0] ?? null;
@@ -379,7 +393,7 @@ export default function UsersPage() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900 leading-tight">{u.name}</div>
                       {u.id === currentUserId && (
-                        <span className="text-[10px] text-blue-600 font-medium">You</span>
+                        <span className="text-[10px] text-primary font-medium">You</span>
                       )}
                     </td>
 
@@ -426,9 +440,9 @@ export default function UsersPage() {
                     {/* Status */}
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
-                        u.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        u.is_active ? 'bg-success-light text-success' : 'bg-gray-100 text-gray-500'
                       }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-success' : 'bg-gray-400'}`}></span>
                         {u.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
@@ -445,8 +459,8 @@ export default function UsersPage() {
                           onClick={(e) => { e.stopPropagation(); toggleActive(u); }}
                           className={`text-xs px-2 py-1 rounded border transition-colors ${
                             u.is_active
-                              ? 'text-red-500 border-red-200 hover:bg-red-50'
-                              : 'text-green-600 border-green-200 hover:bg-green-50'
+                              ? 'text-danger border-danger-border hover:bg-danger-light'
+                              : 'text-success border-success-border hover:bg-success-light'
                           }`}>
                           {u.is_active ? 'Deactivate' : 'Activate'}
                         </button>
@@ -460,16 +474,20 @@ export default function UsersPage() {
             </tbody>
           </table>
 
-          {users.length === 0 && (
-            <div className="text-center py-12 text-gray-400 text-sm">No users yet. Create the first one.</div>
-          )}
-          {users.length > 0 && filtered.length === 0 && (
+          {!loading && users.length === 0 && (
             <div className="text-center py-12 text-gray-400 text-sm">
-              No users match your filters.{' '}
-              <button onClick={() => { setSearch(''); setFilterStatus('all'); setFilterRole(''); }}
-                className="text-blue-600 hover:underline">Clear filters</button>
+              {(search || filterStatus !== 'all' || filterRole)
+                ? <>No users match your filters.{' '}
+                  <button onClick={() => { setSearchInput(''); setFilterStatus('all'); setFilterRole(''); setPage(1); }}
+                    className="text-primary hover:underline">Clear filters</button></>
+                : 'No users yet. Create the first one.'}
             </div>
           )}
+          <Pagination
+            pagination={pagination}
+            onPageChange={setPage}
+            onLimitChange={next => { setLimit(next); setPage(1); }}
+          />
         </div>
       )}
       <FlashToast message={error} variant="error" onDismiss={() => setError('')} />

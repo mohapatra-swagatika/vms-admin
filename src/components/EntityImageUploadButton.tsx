@@ -9,15 +9,17 @@ type Props = {
   entityType: EntityImageType;
   entityId: string;
   onUploaded?: (latestImageUrl?: string) => void;
+  onProgressChange?: (progress: number | null) => void;
   className?: string;
 };
 
 const defaultClass =
-  'text-xs text-violet-700 hover:bg-violet-50 border border-violet-200 px-2 py-1 rounded transition-colors disabled:opacity-50';
+  'text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded transition-colors disabled:opacity-50';
 
-export default function EntityImageUploadButton({ entityType, entityId, onUploaded, className }: Props) {
+export default function EntityImageUploadButton({ entityType, entityId, onUploaded, onProgressChange, className }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
@@ -28,6 +30,15 @@ export default function EntityImageUploadButton({ entityType, entityId, onUpload
   }, []);
 
   if (!allowed) return null;
+
+  function reportProgress(value: number | null) {
+    if (value === null) {
+      onProgressChange?.(null);
+      return;
+    }
+    setProgress(value);
+    onProgressChange?.(value);
+  }
 
   async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files ?? []);
@@ -49,13 +60,17 @@ export default function EntityImageUploadButton({ entityType, entityId, onUpload
     }
 
     setUploading(true);
+    reportProgress(0);
     try {
-      const result = await api.uploadEntityImages(entityType, entityId, selected);
+      const result = await api.uploadEntityImages(entityType, entityId, selected, {
+        onProgress: reportProgress,
+      });
       onUploaded?.(result.image_url);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to upload images');
     } finally {
       setUploading(false);
+      reportProgress(null);
       if (inputRef.current) inputRef.current.value = '';
     }
   }
@@ -77,7 +92,7 @@ export default function EntityImageUploadButton({ entityType, entityId, onUpload
         className={className ?? defaultClass}
         title={`Select one or more images (max ${MAX_ENTITY_IMAGES_PER_UPLOAD})`}
       >
-        {uploading ? 'Uploading…' : '📷 Upload Image'}
+        {uploading ? `Uploading ${progress}%` : '📷 Upload Image'}
       </button>
     </>
   );

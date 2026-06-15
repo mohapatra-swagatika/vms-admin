@@ -21,7 +21,7 @@ type Props = {
 };
 
 const defaultClass =
-  'text-xs text-violet-700 hover:bg-violet-50 border border-violet-200 px-2 py-1 rounded transition-colors disabled:opacity-50';
+  'text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded transition-colors disabled:opacity-50';
 
 export default function EmployeeCsvUploadButton({
   mode,

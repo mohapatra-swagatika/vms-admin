@@ -108,15 +108,15 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   if (!employee) {
     return (
       <div className="p-8">
-        <Link href="/dashboard/employees" className="text-sm text-blue-600 hover:underline">← Back to Employees</Link>
-        <p className="mt-4 text-red-600">{error || 'Employee not found'}</p>
+        <Link href="/dashboard/employees" className="text-sm text-primary hover:underline">← Back to Employees</Link>
+        <p className="mt-4 text-danger">{error || 'Employee not found'}</p>
       </div>
     );
   }
 
   return (
     <div className="p-8 max-w-4xl">
-      <Link href="/dashboard/employees" className="text-sm text-blue-600 hover:underline">← Back to Employees</Link>
+      <Link href="/dashboard/employees" className="text-sm text-primary hover:underline">← Back to Employees</Link>
 
       <div className="mt-4 mb-6 flex items-start justify-between gap-4">
         <div>
@@ -140,7 +140,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="text-sm px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
+              className="text-sm px-4 py-2 border border-danger-border text-danger rounded-lg hover:bg-danger-light disabled:opacity-50"
             >
               {deleting ? 'Deleting…' : 'Delete'}
             </button>
@@ -148,38 +148,41 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
+      {error && <div className="mb-4 bg-danger-light border border-danger-border text-danger text-sm px-4 py-2 rounded-lg">{error}</div>}
+      {success && <div className="mb-4 bg-success-light border border-success-border text-success text-sm px-4 py-2 rounded-lg">{success}</div>}
+
       <section className="bg-white rounded-2xl border border-gray-200 p-6">
         {editing ? (
           <form onSubmit={handleSave} className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Full Name *</label>
               <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
               <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
               <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Employee Code</label>
               <input value={form.employee_code} onChange={e => setForm({ ...form, employee_code: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Department</label>
               <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Job Title</label>
               <input value={form.job_title} onChange={e => setForm({ ...form, job_title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div className="col-span-2">
               <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -191,7 +194,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               <button type="button" onClick={() => setEditing(false)}
                 className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
               <button type="submit" disabled={saving}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
+                className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-60">
                 {saving ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
@@ -213,7 +216,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
             <div>
               <dt className="text-xs text-gray-500">Status</dt>
               <dd className="mt-0.5">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${employee.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${employee.is_active ? 'bg-success-light text-success' : 'bg-gray-100 text-gray-500'}`}>
                   {employee.is_active ? 'Active' : 'Inactive'}
                 </span>
               </dd>

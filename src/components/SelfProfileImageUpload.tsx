@@ -5,15 +5,17 @@ import { canUploadSelfImage, getUser, setStoredProfileImage } from '@/lib/auth';
 
 type Props = {
   onUploaded?: (profileImageUrl: string) => void;
+  onProgressChange?: (progress: number | null) => void;
   className?: string;
 };
 
 const defaultClass =
-  'text-xs text-violet-700 hover:bg-violet-50 border border-violet-200 px-2 py-1 rounded transition-colors disabled:opacity-50';
+  'text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded transition-colors disabled:opacity-50';
 
-export default function SelfProfileImageUpload({ onUploaded, className }: Props) {
+export default function SelfProfileImageUpload({ onUploaded, onProgressChange, className }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [allowed, setAllowed] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -27,6 +29,15 @@ export default function SelfProfileImageUpload({ onUploaded, className }: Props)
 
   if (!ready || !allowed) return null;
 
+  function reportProgress(value: number | null) {
+    if (value === null) {
+      onProgressChange?.(null);
+      return;
+    }
+    setProgress(value);
+    onProgressChange?.(value);
+  }
+
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     const userId = getUser()?.id;
@@ -34,14 +45,16 @@ export default function SelfProfileImageUpload({ onUploaded, className }: Props)
     const validationError = validateImageFile(file);
     if (validationError) { alert(validationError); return; }
     setUploading(true);
+    reportProgress(0);
     try {
-      const result = await api.uploadProfileImage(userId, file);
+      const result = await api.uploadProfileImage(userId, file, { onProgress: reportProgress });
       setStoredProfileImage(result.profile_image_url);
       onUploaded?.(result.profile_image_url);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to upload image');
     } finally {
       setUploading(false);
+      reportProgress(null);
       if (inputRef.current) inputRef.current.value = '';
     }
   }
@@ -61,7 +74,7 @@ export default function SelfProfileImageUpload({ onUploaded, className }: Props)
         disabled={uploading}
         className={className ?? defaultClass}
       >
-        {uploading ? 'Uploading…' : '📷 Upload Image'}
+        {uploading ? `Uploading ${progress}%` : '📷 Upload Image'}
       </button>
     </>
   );

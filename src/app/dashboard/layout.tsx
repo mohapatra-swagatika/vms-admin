@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               key={item.href} href={item.href}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                 pathname === item.href
-                  ? 'bg-blue-50 text-blue-700 font-medium'
+                  ? 'bg-primary-muted text-primary font-medium'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -60,7 +60,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
           <button
             onClick={logout}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-danger hover:bg-danger-hover rounded-lg transition-colors"
           >
             <span className="text-base leading-none">⏻</span>
             Logout

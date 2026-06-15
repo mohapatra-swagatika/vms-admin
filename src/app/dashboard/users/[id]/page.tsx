@@ -22,10 +22,9 @@ type Entity  = { id: string; name: string };
 type ScopeType = 'global' | 'tower' | 'organization' | 'company' | 'location';
 
 const levelColor = (level: number) => {
-  if (level >= 800) return 'bg-red-100 text-red-700';
-  if (level >= 600) return 'bg-blue-100 text-blue-700';
-  if (level >= 400) return 'bg-amber-100 text-amber-700';
-  return 'bg-green-100 text-green-700';
+  if (level >= 1000) return 'bg-primary text-white';
+  if (level >= 400) return 'bg-primary-muted text-primary';
+  return 'bg-gray-100 text-gray-600';
 };
 
 export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -203,13 +202,13 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   if (loading) return <div className="p-8 text-gray-400 text-sm">Loading user...</div>;
-  if (!user)   return <div className="p-8 text-red-600 text-sm">User not found</div>;
+  if (!user)   return <div className="p-8 text-danger text-sm">User not found</div>;
 
   return (
     <div className="p-8 max-w-4xl">
       {/* Breadcrumb + header */}
       <div className="mb-6">
-        <Link href="/dashboard/users" className="text-xs text-gray-500 hover:text-blue-600">
+        <Link href="/dashboard/users" className="text-xs text-gray-500 hover:text-primary">
           ← Back to Users
         </Link>
         <div className="flex items-start justify-between mt-2">
@@ -230,9 +229,9 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             <div className="flex items-center gap-3 mt-1">
               <span className="text-sm text-gray-500">{user.email}</span>
               <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
-                user.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                user.is_active ? 'bg-success-light text-success' : 'bg-gray-100 text-gray-500'
               }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-success-light0' : 'bg-gray-400'}`}></span>
                 {user.is_active ? 'Active' : 'Inactive'}
               </span>
             </div>
@@ -240,7 +239,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div className="flex items-center gap-2">
             {isSelf ? (
-              <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
+              <span className="text-xs text-warning bg-warning-light border border-warning-border px-3 py-1.5 rounded-lg">
                 👤 This is your account
               </span>
             ) : (
@@ -250,7 +249,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                   {user.is_active ? 'Deactivate' : 'Activate'}
                 </button>
                 <button onClick={deleteUser}
-                  className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">
+                  className="px-3 py-1.5 text-sm text-danger border border-danger-border rounded-lg hover:bg-danger-light">
                   Delete
                 </button>
               </>
@@ -259,19 +258,22 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
+      {error   && <div className="mb-4 bg-danger-light border border-danger-border text-danger text-sm px-4 py-2 rounded-lg">{error}</div>}
+      {success && <div className="mb-4 bg-success-light border border-success-border text-success text-sm px-4 py-2 rounded-lg">{success}</div>}
+
       {/* Profile */}
       <section className="bg-white rounded-2xl border border-gray-200 p-6 mb-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-gray-900">Profile</h2>
           {!editingProfile ? (
             <button onClick={() => setEditingProfile(true)}
-              className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">Edit</button>
+              className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">Edit</button>
           ) : (
             <div className="flex gap-2">
               <button onClick={() => { setEditingProfile(false); setProfile({ name: user.name, email: user.email, phone: user.phone || '' }); }}
                 className="text-xs text-gray-500 hover:bg-gray-100 px-2 py-1 rounded">Cancel</button>
               <button onClick={saveProfile}
-                className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Save</button>
+                className="text-xs bg-primary text-white px-3 py-1 rounded hover:bg-primary-hover">Save</button>
             </div>
           )}
         </div>
@@ -280,21 +282,21 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             <label className="block text-xs font-medium text-gray-500 mb-1">Full Name</label>
             {editingProfile ? (
               <input value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary" />
             ) : <div className="text-sm text-gray-900">{user.name}</div>}
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
             {editingProfile ? (
               <input type="email" value={profile.email} onChange={e => setProfile({...profile, email: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary" />
             ) : <div className="text-sm text-gray-900">{user.email}</div>}
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Phone</label>
             {editingProfile ? (
               <input value={profile.phone} onChange={e => setProfile({...profile, phone: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary" />
             ) : <div className="text-sm text-gray-900">{user.phone || <span className="text-gray-400">—</span>}</div>}
           </div>
           <div>
@@ -312,7 +314,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             <p className="text-xs text-gray-500 mt-1">Reset the user&apos;s password and share the new one with them.</p>
           </div>
           <button onClick={() => { setShowReset(true); setResetPwd(''); setNewPwd(''); }}
-            className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+            className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover">
             Reset Password
           </button>
         </div>
@@ -320,13 +322,13 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         {showReset && (
           <div className="mt-4 border-t border-gray-100 pt-4">
             {resetPwd ? (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="text-sm font-semibold text-green-900 mb-1">✓ Password reset successfully</div>
-                <div className="text-xs text-green-800 mb-2">Share this new password with the user. <strong>It will not be shown again.</strong></div>
-                <div className="bg-white border border-green-300 rounded px-3 py-2 font-mono text-sm flex items-center justify-between">
+              <div className="bg-success-light border border-success-border rounded-lg p-4">
+                <div className="text-sm font-semibold text-success mb-1">✓ Password reset successfully</div>
+                <div className="text-xs text-success mb-2">Share this new password with the user. <strong>It will not be shown again.</strong></div>
+                <div className="bg-white border border-success-border rounded px-3 py-2 font-mono text-sm flex items-center justify-between">
                   <span>{resetPwd}</span>
                   <button onClick={() => navigator.clipboard.writeText(resetPwd)}
-                    className="text-xs text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded">Copy</button>
+                    className="text-xs text-primary hover:bg-primary-muted px-2 py-0.5 rounded">Copy</button>
                 </div>
                 <button onClick={() => { setShowReset(false); setResetPwd(''); }}
                   className="mt-3 text-xs text-gray-600 hover:bg-gray-100 px-3 py-1 rounded">Done</button>
@@ -337,10 +339,10 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                   <label className="block text-xs font-medium text-gray-700 mb-1">New password (leave blank to auto-generate)</label>
                   <input type="text" value={newPwd} onChange={e => setNewPwd(e.target.value)}
                     placeholder="Min 8 characters, or leave blank"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono" />
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary font-mono" />
                 </div>
                 <button onClick={doReset}
-                  className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600">Reset</button>
+                  className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover">Reset</button>
                 <button onClick={() => setShowReset(false)}
                   className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
               </div>
@@ -357,7 +359,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             <p className="text-xs text-gray-500 mt-1">{assignments.length} active</p>
           </div>
           <button onClick={() => setShowAddRole(!showAddRole)}
-            className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">
+            className="text-sm bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-hover">
             {showAddRole ? 'Cancel' : '+ Add Role'}
           </button>
         </div>
@@ -372,7 +374,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                   value={newAssignment.role_id}
                   onChange={e => setNewAssignment({ ...newAssignment, role_id: e.target.value })}
                   disabled={rolesLoading}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary disabled:bg-gray-50"
                 >
                   <option value="">{rolesLoading ? 'Loading roles…' : '-- Select role --'}</option>
                   {roles.map(r => (
@@ -389,7 +391,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                 <label className="block text-xs font-medium text-gray-700 mb-1">Scope Type</label>
                 <select value={newAssignment.scope_type}
                   onChange={e => setNewAssignment({...newAssignment, scope_type: e.target.value as ScopeType, scope_id: ''})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary">
                   <option value="global">Global</option>
                   <option value="tower">Tower</option>
                   <option value="organization">Organization</option>
@@ -404,7 +406,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                   </label>
                   <select required value={newAssignment.scope_id}
                     onChange={e => setNewAssignment({...newAssignment, scope_id: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary">
                     <option value="">-- Select --</option>
                     {scopeOptions().map(o => (
                       <option key={o.id} value={o.id}>{o.name}</option>
@@ -418,12 +420,12 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                 </label>
                 <input type="datetime-local" value={newAssignment.expires_at}
                   onChange={e => setNewAssignment({...newAssignment, expires_at: e.target.value})}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary" />
                 <p className="text-xs text-gray-400 mt-0.5">For temporary access (e.g. contractors)</p>
               </div>
             </div>
             <div className="flex justify-end mt-3">
-              <button type="submit" className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button type="submit" className="px-4 py-1.5 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover">
                 Assign Role
               </button>
             </div>
@@ -450,7 +452,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                       <div className="text-xs text-gray-500">
                         {a.scope_type === 'global' ? 'Global' : `${a.scope_type} · ${scope || '(unknown)'}`}
                         {a.expires_at && (
-                          <span className={`ml-3 ${expired ? 'text-red-600' : 'text-amber-600'}`}>
+                          <span className={`ml-3 ${expired ? 'text-danger' : 'text-warning'}`}>
                             {expired ? '⚠ Expired' : '⏱'} {new Date(a.expires_at).toLocaleString()}
                           </span>
                         )}
@@ -458,7 +460,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                   </div>
                   <button onClick={() => removeRole(a.id, a.display_name)}
-                    className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded">
+                    className="text-xs text-danger hover:bg-danger-light px-2 py-1 rounded">
                     Remove
                   </button>
                 </div>
@@ -468,8 +470,8 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         )}
       </section>
       <ConfirmDialog {...dialogProps} />
-      <FlashToast message={error} variant="error" onDismiss={() => setError('')} />
       <FlashToast message={success} variant="success" onDismiss={() => setSuccess('')} />
+      <FlashToast message={error} variant="error" onDismiss={() => setError('')} />
     </div>
   );
 }

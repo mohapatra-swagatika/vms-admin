@@ -8,6 +8,7 @@ import {
   type ScopedEntityType,
 } from '@/lib/auth';
 import EmployeeCsvUploadButton from '@/components/EmployeeCsvUploadButton';
+import Pagination from '@/components/Pagination';
 import FlashToast from '@/components/FlashToast';
 
 type EntityOption = { id: string; name: string; type: ScopedEntityType };
@@ -36,6 +37,7 @@ export default function EmployeesPage() {
   const [filterEntityType, setFilterEntityType] = useState<EntityTypeFilter>('');
   const [filterEntityId, setFilterEntityId] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
   const [entityOptions, setEntityOptions] = useState<EntityOption[]>([]);
   const [visibleEntityTypes, setVisibleEntityTypes] = useState<ScopedEntityType[]>([]);
@@ -94,13 +96,21 @@ export default function EmployeesPage() {
     try {
       const params: Parameters<typeof api.getEmployees>[0] = {
         page,
-        limit: 20,
+        limit,
         search: search || undefined,
         department: filterDepartment || undefined,
       };
-      if (filterEntityType && filterEntityId) {
+      if (filterEntityType) {
         params.entity_type = filterEntityType;
-        params.entity_id = filterEntityId;
+        if (filterEntityId) {
+          const selected = entityOptions.find(e => e.id === filterEntityId);
+          if (selected) {
+            params.entity_type = selected.type;
+            params.entity_id = selected.id;
+          } else {
+            params.entity_id = filterEntityId;
+          }
+        }
       }
       if (filterStatus === 'active') params.is_active = true;
       if (filterStatus === 'inactive') params.is_active = false;
@@ -113,7 +123,7 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  }, [mounted, page, search, filterDepartment, filterStatus, filterEntityType, filterEntityId]);
+  }, [mounted, entityOptions, page, limit, search, filterDepartment, filterStatus, filterEntityType, filterEntityId]);
 
   useEffect(() => {
     setMounted(true);
@@ -143,6 +153,11 @@ export default function EmployeesPage() {
   function entityFilterOptions(): EntityOption[] {
     if (!filterEntityType) return entityOptions;
     return entityOptions.filter(e => e.type === filterEntityType);
+  }
+
+  function entityFilterAllLabel(): string {
+    if (filterEntityType) return `All ${ENTITY_LABELS[filterEntityType]}s`;
+    return 'All entities';
   }
 
   function formEntityOptions(): EntityOption[] {
@@ -212,14 +227,14 @@ export default function EmployeesPage() {
               entityId={csvTarget.id}
               showTemplateLink
               onImported={() => load()}
-              className="text-xs text-violet-700 hover:bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
             />
           )}
           {mounted && canCreateEmployee() && (
             <button
               type="button"
               onClick={() => setShowForm(!showForm)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors"
             >
               {showForm ? 'Cancel' : '+ Create Employee'}
             </button>
@@ -234,7 +249,7 @@ export default function EmployeesPage() {
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search name, email, code…"
-            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
@@ -245,7 +260,7 @@ export default function EmployeesPage() {
             setFilterEntityId('');
             setPage(1);
           }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">All entity types</option>
           {visibleEntityTypes.map(t => (
@@ -257,9 +272,9 @@ export default function EmployeesPage() {
           value={filterEntityId}
           onChange={e => { setFilterEntityId(e.target.value); setPage(1); }}
           disabled={!filterEntityType}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 min-w-[160px]"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 min-w-[160px]"
         >
-          <option value="">All entities</option>
+          <option value="">{entityFilterAllLabel()}</option>
           {entityFilterOptions().map(e => (
             <option key={`${e.type}-${e.id}`} value={e.id}>{e.name}</option>
           ))}
@@ -269,13 +284,13 @@ export default function EmployeesPage() {
           value={filterDepartment}
           onChange={e => { setFilterDepartment(e.target.value); setPage(1); }}
           placeholder="Department"
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-36"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary w-36"
         />
 
         <select
           value={filterStatus}
           onChange={e => { setFilterStatus(e.target.value as typeof filterStatus); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="all">All statuses</option>
           <option value="active">Active only</option>
@@ -283,6 +298,7 @@ export default function EmployeesPage() {
         </select>
       </div>
 
+      
       {showForm && mounted && canCreateEmployee() && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
           <h2 className="text-base font-semibold text-gray-900 mb-4">Create Employee</h2>
@@ -293,7 +309,7 @@ export default function EmployeesPage() {
                 required
                 value={form.entity_type}
                 onChange={e => setForm({ ...form, entity_type: e.target.value as EntityTypeFilter, entity_id: '' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Select type</option>
                 {visibleEntityTypes.map(t => (
@@ -308,7 +324,7 @@ export default function EmployeesPage() {
                 value={form.entity_id}
                 onChange={e => setForm({ ...form, entity_id: e.target.value })}
                 disabled={!form.entity_type}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"
               >
                 <option value="">Select entity</option>
                 {formEntityOptions().map(e => (
@@ -319,37 +335,37 @@ export default function EmployeesPage() {
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Full Name *</label>
               <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
               <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
               <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Employee Code</label>
               <input value={form.employee_code} onChange={e => setForm({ ...form, employee_code: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Department</label>
               <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Job Title</label>
               <input value={form.job_title} onChange={e => setForm({ ...form, job_title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div className="col-span-2 flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setShowForm(false)}
                 className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-              <button type="submit" className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button type="submit" className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover">
                 Create Employee
               </button>
             </div>
@@ -393,7 +409,7 @@ export default function EmployeesPage() {
                     {emp.entity_name || emp.entity_id.slice(0, 8)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${emp.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${emp.is_active ? 'bg-success-light text-success' : 'bg-gray-100 text-gray-500'}`}>
                       {emp.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
@@ -401,30 +417,11 @@ export default function EmployeesPage() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {pagination.total_pages > 1 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
-          <span>Page {pagination.page} of {pagination.total_pages}</span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage(p => p - 1)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              disabled={page >= pagination.total_pages}
-              onClick={() => setPage(p => p + 1)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50"
-            >
-              Next
-            </button>
-          </div>
+          <Pagination
+            pagination={pagination}
+            onPageChange={setPage}
+            onLimitChange={next => { setLimit(next); setPage(1); }}
+          />
         </div>
       )}
       <FlashToast message={error} variant="error" onDismiss={() => setError('')} />

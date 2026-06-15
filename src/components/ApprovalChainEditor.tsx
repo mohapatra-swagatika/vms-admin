@@ -78,7 +78,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-blue-200 shadow-sm p-6">
+    <div className="bg-white rounded-2xl border border-primary-border shadow-sm p-6">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
@@ -89,15 +89,15 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg">{error}</div>
+        <div className="mb-4 alert-danger text-xs px-3 py-2 rounded-lg">{error}</div>
       )}
 
       {/* Bypass toggle */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+      <div className="bg-warning-light border border-warning-border rounded-xl p-4 mb-5">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-semibold text-amber-900">Bypass Enabled</div>
-            <div className="text-xs text-amber-700 mt-0.5 max-w-sm">
+            <div className="text-sm font-semibold text-warning">Bypass Enabled</div>
+            <div className="text-xs text-warning mt-0.5 max-w-sm">
               When ON: a higher-level approver can approve in one step, automatically bypassing all lower steps.
               <br />
               <span className="font-medium">Example:</span> Tower approves → Admin step skipped automatically.
@@ -108,8 +108,8 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
             role="switch"
             aria-checked={bypass}
             onClick={() => setBypass(!bypass)}
-            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
-              bypass ? 'bg-amber-500' : 'bg-gray-300'
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+              bypass ? 'bg-primary' : 'bg-gray-300'
             }`}
           >
             <span
@@ -121,7 +121,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
           </button>
         </div>
         {bypass && (
-          <div className="mt-2 text-xs text-amber-800 bg-amber-100 rounded px-2 py-1">
+          <div className="mt-2 text-xs text-warning bg-warning-light border border-warning-border rounded px-2 py-1">
             ✓ Bypass is <strong>enabled</strong> — high-level approvals will automatically skip lower steps.
           </div>
         )}
@@ -134,7 +134,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
             Approval Steps ({steps.length})
           </div>
           <button onClick={addStep}
-            className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700">
+            className="text-xs bg-primary text-white px-3 py-1 rounded-lg hover:bg-primary-hover">
             + Add Step
           </button>
         </div>
@@ -151,7 +151,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
               <div key={idx}
                 className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5">
                 {/* Step number */}
-                <div className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
                   {step.step}
                 </div>
 
@@ -159,7 +159,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
                 <select
                   value={step.level}
                   onChange={e => updateStep(idx, 'level', parseInt(e.target.value))}
-                  className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white"
                 >
                   {APPROVER_LEVELS.map(l => (
                     <option key={l.level} value={l.level}>{l.label}</option>
@@ -171,7 +171,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
                   value={step.label}
                   onChange={e => updateStep(idx, 'label', e.target.value)}
                   placeholder="Label (optional, e.g. Security check)"
-                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white"
                 />
 
                 {/* Move up / down */}
@@ -184,7 +184,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
 
                 {/* Remove */}
                 <button onClick={() => removeStep(idx)}
-                  className="text-red-500 hover:text-red-700 text-sm px-1">✕</button>
+                  className="text-danger hover:text-danger/80 text-sm px-1">✕</button>
               </div>
             ))}
           </div>
@@ -196,20 +196,20 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
         <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-5 text-xs">
           <div className="text-gray-500 font-semibold mb-2">Flow preview</div>
           <div className="flex items-center flex-wrap gap-1">
-            <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Visitor submits</span>
+            <span className="bg-success-light text-success px-2 py-0.5 rounded-full">Visitor submits</span>
             {steps.map((s, i) => (
               <span key={i} className="flex items-center gap-1">
                 <span className="text-gray-400">→</span>
-                <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+                <span className="bg-primary-muted text-primary border border-primary-border px-2 py-0.5 rounded-full">
                   Step {s.step}: L{s.level}{s.label ? ` (${s.label})` : ''}
                 </span>
               </span>
             ))}
             <span className="text-gray-400">→</span>
-            <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">Approved ✓</span>
+            <span className="bg-success-light text-success px-2 py-0.5 rounded-full">Approved ✓</span>
           </div>
           {bypass && steps.length > 1 && (
-            <div className="mt-2 text-amber-700">
+            <div className="mt-2 text-warning">
               ⚡ Bypass ON — L{Math.max(...steps.map(s => s.level))} approval skips all lower steps
             </div>
           )}
@@ -223,7 +223,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
           Cancel
         </button>
         <button onClick={handleSave} disabled={saving}
-          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
+          className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-60">
           {saving ? 'Saving…' : 'Save Approval Chain'}
         </button>
       </div>

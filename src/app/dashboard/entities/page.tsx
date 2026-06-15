@@ -15,6 +15,7 @@ import { type EntityConfig, type ConfigurableEntityType } from '@/lib/entityConf
 import EntityImageUploadButton from '@/components/EntityImageUploadButton';
 import EmployeeCsvUploadButton from '@/components/EmployeeCsvUploadButton';
 import EntityAvatar from '@/components/EntityAvatar';
+import { useImageUploadProgress } from '@/hooks/useImageUploadProgress';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import FlashToast from '@/components/FlashToast';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
@@ -47,27 +48,27 @@ function CredentialCard({ result, onDone }: { result: ManagerResult; onDone: () 
     setCopied(true); setTimeout(() => setCopied(false), 2000);
   }
   return (
-    <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+    <div className="mt-2 bg-success-light border border-success-border rounded-xl p-4">
       <div className="flex items-start justify-between mb-2">
         <div>
-          <div className="text-sm font-semibold text-emerald-800">✓ Manager created for {result.entityName}</div>
-          <div className="text-xs text-emerald-700 mt-0.5">Share these credentials — password won&apos;t be shown again.</div>
+          <div className="text-sm font-semibold text-success">✓ Manager created for {result.entityName}</div>
+          <div className="text-xs text-success mt-0.5">Share these credentials — password won&apos;t be shown again.</div>
         </div>
-        <button onClick={onDone} className="text-emerald-600 hover:text-emerald-800 text-lg leading-none">✕</button>
+        <button onClick={onDone} className="text-success hover:text-success/80 text-lg leading-none">✕</button>
       </div>
-      <div className="bg-white border border-emerald-200 rounded-lg p-3 font-mono text-sm space-y-1">
+      <div className="bg-white border border-success-border rounded-lg p-3 font-mono text-sm space-y-1">
         <div><span className="text-gray-500 text-xs">Name&nbsp;&nbsp;&nbsp;:</span> {result.name}</div>
         <div><span className="text-gray-500 text-xs">Email&nbsp;&nbsp;:</span> {result.email}</div>
-        <div><span className="text-gray-500 text-xs">Password:</span> <span className="font-bold text-emerald-700">{result.password}</span></div>
-        <div><span className="text-gray-500 text-xs">Role&nbsp;&nbsp;&nbsp;:</span> <span className="text-blue-700">{result.roleDisplay}</span></div>
+        <div><span className="text-gray-500 text-xs">Password:</span> <span className="font-bold text-success">{result.password}</span></div>
+        <div><span className="text-gray-500 text-xs">Role&nbsp;&nbsp;&nbsp;:</span> <span className="text-primary">{result.roleDisplay}</span></div>
       </div>
       <div className="flex justify-end gap-2 mt-3">
         <button onClick={copy}
-          className="text-xs px-3 py-1.5 border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-100">
+          className="text-xs px-3 py-1.5 border border-success-border text-success rounded-lg hover:bg-success-light">
           {copied ? '✓ Copied!' : '📋 Copy credentials'}
         </button>
         <button onClick={onDone}
-          className="text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+          className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary-hover">
           Done
         </button>
       </div>
@@ -77,10 +78,8 @@ function CredentialCard({ result, onDone }: { result: ManagerResult; onDone: () 
 
 // ── Inline "Add Manager" form ────────────────────────────────────────────────
 const levelColor = (level: number) => {
-  if (level >= 800) return 'bg-teal-100 text-teal-700';
-  if (level >= 600) return 'bg-blue-100 text-blue-700';
-  if (level >= 400) return 'bg-amber-100 text-amber-700';
-  if (level >= 200) return 'bg-green-100 text-green-700';
+  if (level >= 1000) return 'bg-primary text-white';
+  if (level >= 400) return 'bg-primary-muted text-primary';
   return 'bg-gray-100 text-gray-600';
 };
 
@@ -139,18 +138,18 @@ function ManagerForm({
   }
 
   return (
-    <div className="mt-2 bg-blue-50 border border-blue-200 rounded-xl p-4">
+    <div className="mt-2 bg-primary-muted border border-primary-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-sm font-semibold text-blue-900">Add User — {entityName}</div>
-          <div className="text-xs text-blue-700 mt-0.5">
+          <div className="text-sm font-semibold text-primary">Add User — {entityName}</div>
+          <div className="text-xs text-primary mt-0.5">
             Creates a new account and assigns a role scoped to this {scopeType}
           </div>
         </div>
-        <button onClick={onCancel} className="text-blue-400 hover:text-blue-600 text-lg leading-none">✕</button>
+        <button onClick={onCancel} className="text-gray-400 hover:text-primary text-lg leading-none">✕</button>
       </div>
 
-      {err && <div className="mb-3 text-xs text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{err}</div>}
+      {err && <div className="mb-3 text-xs alert-danger px-3 py-2 rounded-lg">{err}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-3">
 
@@ -160,7 +159,7 @@ function ManagerForm({
           {loadingRoles ? (
             <div className="px-3 py-2 border border-gray-200 rounded-lg text-xs text-gray-400 bg-white">Loading roles…</div>
           ) : roles.length === 0 ? (
-            <div className="px-3 py-2 border border-red-200 rounded-lg text-xs text-red-600 bg-red-50">No assignable roles found</div>
+            <div className="px-3 py-2 border border-danger-border rounded-lg text-xs text-danger bg-danger-light">No assignable roles found</div>
           ) : (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {roles.map(r => (
@@ -170,13 +169,13 @@ function ManagerForm({
                   onClick={() => setSelectedRole(r)}
                   className={`text-left px-3 py-2 rounded-lg border text-xs transition-all ${
                     selectedRole?.id === r.id
-                      ? 'border-blue-500 bg-blue-600 text-white shadow-sm'
-                      : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 text-gray-700'
+                      ? 'border-primary bg-primary text-white shadow-sm'
+                      : 'border-gray-200 bg-white hover:border-primary-border hover:bg-primary-muted text-gray-700'
                   }`}
                 >
                   <div className="font-semibold leading-tight">{r.display_name}</div>
                   <div className={`mt-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded-full inline-block ${
-                    selectedRole?.id === r.id ? 'bg-blue-500 text-blue-100' : levelColor(r.level)
+                    selectedRole?.id === r.id ? 'bg-primary text-white' : levelColor(r.level)
                   }`}>
                     Lv {r.level} {!r.is_system && '· custom'}
                   </div>
@@ -192,13 +191,13 @@ function ManagerForm({
             <label className="block text-xs font-medium text-gray-700 mb-1">Full Name *</label>
             <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
               placeholder="e.g. Priya Sharma"
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-white" />
+              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary bg-white" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
             <input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
               placeholder="priya@company.com"
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-white" />
+              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary bg-white" />
           </div>
         </div>
 
@@ -221,7 +220,7 @@ function ManagerForm({
             <input type="password" required value={form.password}
               onChange={e => setForm({ ...form, password: e.target.value })}
               placeholder="Min 8 characters"
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-white" />
+              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary bg-white" />
           )}
         </div>
 
@@ -243,7 +242,7 @@ function ManagerForm({
             Cancel
           </button>
           <button type="submit" disabled={saving || !selectedRole || loadingRoles}
-            className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
+            className="px-4 py-1.5 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-60">
             {saving ? 'Creating…' : 'Create User'}
           </button>
         </div>
@@ -254,6 +253,7 @@ function ManagerForm({
 
 // ════════════════════════════════════════════════════════════════════════════
 export default function EntitiesPage() {
+  const { getProgress, onProgressChange } = useImageUploadProgress();
   const { confirm, dialogProps } = useConfirmDialog();
 
   // Scope must be read client-side only (localStorage unavailable on SSR).
@@ -453,13 +453,13 @@ export default function EntitiesPage() {
             placeholder={`${createFormTitle[type].replace('New ', '')} name *`}
             value={createForm.name}
             onChange={e => setCreateForm({ ...createForm, name: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary"
           />
           <input
             placeholder="Address"
             value={createForm.address}
             onChange={e => setCreateForm({ ...createForm, address: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="flex justify-end gap-2 mt-3">
@@ -472,7 +472,7 @@ export default function EntitiesPage() {
           </button>
           <button
             type="submit"
-            className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-1.5 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover"
           >
             Create
           </button>
@@ -754,6 +754,7 @@ export default function EntitiesPage() {
           entityType={kind === 'tower' ? 'tower' : 'organization'}
           entityId={id}
           onUploaded={onImageUploaded}
+          onProgressChange={onProgressChange(id)}
         />
         <EmployeeCsvUploadButton
           mode="child"
@@ -763,23 +764,23 @@ export default function EntitiesPage() {
         />
         {canEdit && (
           <button onClick={() => openEditEntity(id, name, address)}
-            className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">Edit</button>
+            className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">Edit</button>
         )}
         {canAddMgr && (
           <button onClick={() => managerForId === id ? setManagerForId(null) : openManager(id)}
-            className={`text-xs border px-2 py-1 rounded ${managerForId === id ? 'bg-green-100 text-green-700 border-green-300' : 'text-green-700 hover:bg-green-50 border-green-300'}`}>
+            className={`text-xs border px-2 py-1 rounded ${managerForId === id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
             👤 {managerForId === id ? 'Cancel' : 'Add User'}
           </button>
         )}
         {canConfigureEntity && (
           <button onClick={() => openConfigEditor(kind, id)}
-            className="text-xs text-indigo-600 hover:bg-indigo-50 border border-indigo-200 px-2 py-1 rounded">
+            className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
             {isConfigOpen(configEditor, kind, id) ? 'Close' : '⚙ Config'}
           </button>
         )}
         {canDelete && (
           <button onClick={() => kind === 'tower' ? deleteTower(id, name) : deleteOrg(id, name)}
-            className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded">Delete</button>
+            className="text-xs text-danger hover:bg-danger-light px-2 py-1 rounded">Delete</button>
         )}
       </div>
     );
@@ -805,8 +806,8 @@ export default function EntitiesPage() {
                 onClick={() => toggleCreateForm(type)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeCreateType === type
-                    ? 'bg-gray-200 text-gray-800'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-primary-muted text-primary'
+                    : 'bg-primary text-white hover:bg-primary-hover'
                 }`}
               >
                 {activeCreateType === type ? 'Cancel' : `+ ${getCreateEntityLabel(type)}`}
@@ -821,28 +822,28 @@ export default function EntitiesPage() {
       )}
 
       {/* Tabs — only show tabs the user has access to */}
-      <div className="flex gap-1 mb-6 bg-white p-1 rounded-xl border border-gray-200 w-fit">
+      <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm mb-6 w-fit">
         {canSeeTowers && (
           <button onClick={() => setTab('towers')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'towers' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+            className={`px-4 py-2 font-medium transition-colors ${tab === 'towers' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
             Towers ({towers.length})
           </button>
         )}
         {canSeeOrgs && (
           <button onClick={() => setTab('organizations')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'organizations' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+            className={`px-4 py-2 font-medium transition-colors ${tab === 'organizations' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
             Organizations ({orgs.length})
           </button>
         )}
         {canSeeCompanies && (
           <button onClick={() => setTab('companies')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'companies' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+            className={`px-4 py-2 font-medium transition-colors ${tab === 'companies' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
             Companies ({flatCompanies.length})
           </button>
         )}
         {canSeeLocations && (
           <button onClick={() => setTab('locations')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'locations' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+            className={`px-4 py-2 font-medium transition-colors ${tab === 'locations' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
             Locations ({flatLocations.length})
           </button>
         )}
@@ -868,14 +869,14 @@ export default function EntitiesPage() {
               {flatCompanies.map(c => (
                 <div key={c.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                   {editEntityId === c.id ? (
-                    <div className="px-5 py-3 bg-blue-50">
+                    <div className="px-5 py-3 bg-primary-muted">
                       <div className="flex items-center gap-2">
                         <input value={editEntityForm.name} onChange={e => setEditEntityForm({ ...editEntityForm, name: e.target.value })}
-                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white font-semibold" />
+                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white font-semibold" />
                         <input value={editEntityForm.address} onChange={e => setEditEntityForm({ ...editEntityForm, address: e.target.value })}
-                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white" placeholder="Address" />
+                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white" placeholder="Address" />
                         <button onClick={() => saveEntityEdit('company', c.id)}
-                          className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+                          className="px-3 py-1.5 text-xs bg-primary text-white rounded hover:bg-primary-hover">Save</button>
                         <button onClick={() => setEditEntityId(null)}
                           className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                       </div>
@@ -883,12 +884,12 @@ export default function EntitiesPage() {
                   ) : (
                     <div className="px-5 py-4 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <EntityAvatar name={c.name} imageUrl={c.image_url} />
+                        <EntityAvatar name={c.name} imageUrl={c.image_url} uploadProgress={getProgress(c.id)} />
                         <div className="min-w-0">
                           <div className="font-semibold text-gray-900">{c.name}</div>
                           {c.address && <div className="text-xs text-gray-500 mt-0.5">{c.address}</div>}
                           <div className="text-xs mt-1 flex items-center gap-2 flex-wrap">
-                            <span className={`px-2 py-0.5 rounded-full ${c.approval_chain?.bypass_enabled ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                            <span className={`px-2 py-0.5 rounded-full ${c.approval_chain?.bypass_enabled ? 'bg-warning-light text-warning' : 'bg-gray-100 text-gray-500'}`}>
                               Bypass {c.approval_chain?.bypass_enabled ? 'ON' : 'OFF'}
                             </span>
                             <span className="text-gray-500">{c.approval_chain?.steps?.length || 0} step(s)</span>
@@ -897,28 +898,29 @@ export default function EntitiesPage() {
                       </div>
                       <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
                         <EntityImageUploadButton entityType="company" entityId={c.id}
-                          onUploaded={(url) => url && updateEntityImage('company', c.id, url)} />
+                          onUploaded={(url) => url && updateEntityImage('company', c.id, url)}
+                          onProgressChange={onProgressChange(c.id)} />
                         <EmployeeCsvUploadButton mode="child" entityType="company" entityId={c.id}
                           onImported={() => flash('Employee CSV import finished')} />
                         {canEditCompany && (
                           <button onClick={() => openEditEntity(c.id, c.name, c.address)}
-                            className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">Edit</button>
+                            className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">Edit</button>
                         )}
                         {canAddCompanyManager && (
                           <button onClick={() => managerForId === c.id ? setManagerForId(null) : openManager(c.id)}
-                            className={`text-xs border px-2 py-1 rounded ${managerForId === c.id ? 'bg-green-100 text-green-700 border-green-300' : 'text-green-700 hover:bg-green-50 border-green-300'}`}>
+                            className={`text-xs border px-2 py-1 rounded ${managerForId === c.id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
                             👤 {managerForId === c.id ? 'Cancel' : 'Add User'}
                           </button>
                         )}
                         {canEditCompany && (
                           <button onClick={() => openChainEditor(c.id)}
-                            className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">
+                            className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
                             {chainEditorId === c.id ? 'Close' : '⚙ Chain'}
                           </button>
                         )}
                         {canConfigureEntity && (
                           <button onClick={() => openConfigEditor('company', c.id)}
-                            className="text-xs text-indigo-600 hover:bg-indigo-50 border border-indigo-200 px-2 py-1 rounded">
+                            className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
                             {isConfigOpen(configEditor, 'company', c.id) ? 'Close' : '⚙ Config'}
                           </button>
                         )}
@@ -969,14 +971,14 @@ export default function EntitiesPage() {
               {flatLocations.map(l => (
                 <div key={l.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                   {editEntityId === l.id ? (
-                    <div className="px-5 py-3 bg-blue-50">
+                    <div className="px-5 py-3 bg-primary-muted">
                       <div className="flex items-center gap-2">
                         <input value={editEntityForm.name} onChange={e => setEditEntityForm({ ...editEntityForm, name: e.target.value })}
-                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white font-semibold" />
+                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white font-semibold" />
                         <input value={editEntityForm.address} onChange={e => setEditEntityForm({ ...editEntityForm, address: e.target.value })}
-                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white" placeholder="Address" />
+                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white" placeholder="Address" />
                         <button onClick={() => saveEntityEdit('location', l.id)}
-                          className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+                          className="px-3 py-1.5 text-xs bg-primary text-white rounded hover:bg-primary-hover">Save</button>
                         <button onClick={() => setEditEntityId(null)}
                           className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                       </div>
@@ -984,12 +986,12 @@ export default function EntitiesPage() {
                   ) : (
                     <div className="px-5 py-4 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <EntityAvatar name={l.name} imageUrl={l.image_url} />
+                        <EntityAvatar name={l.name} imageUrl={l.image_url} uploadProgress={getProgress(l.id)} />
                         <div className="min-w-0">
                           <div className="font-semibold text-gray-900">{l.name}</div>
                           {l.address && <div className="text-xs text-gray-500 mt-0.5">{l.address}</div>}
                           <div className="text-xs mt-1 flex items-center gap-2 flex-wrap">
-                            <span className={`px-2 py-0.5 rounded-full ${l.approval_chain?.bypass_enabled ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                            <span className={`px-2 py-0.5 rounded-full ${l.approval_chain?.bypass_enabled ? 'bg-warning-light text-warning' : 'bg-gray-100 text-gray-500'}`}>
                               Bypass {l.approval_chain?.bypass_enabled ? 'ON' : 'OFF'}
                             </span>
                             <span className="text-gray-500">{l.approval_chain?.steps?.length || 0} step(s)</span>
@@ -998,28 +1000,29 @@ export default function EntitiesPage() {
                       </div>
                       <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
                         <EntityImageUploadButton entityType="location" entityId={l.id}
-                          onUploaded={(url) => url && updateEntityImage('location', l.id, url)} />
+                          onUploaded={(url) => url && updateEntityImage('location', l.id, url)}
+                          onProgressChange={onProgressChange(l.id)} />
                         <EmployeeCsvUploadButton mode="child" entityType="location" entityId={l.id}
                           onImported={() => flash('Employee CSV import finished')} />
                         {canEditLocation && (
                           <button onClick={() => openEditEntity(l.id, l.name, l.address)}
-                            className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">Edit</button>
+                            className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">Edit</button>
                         )}
                         {canAddLocationManager && (
                           <button onClick={() => managerForId === l.id ? setManagerForId(null) : openManager(l.id)}
-                            className={`text-xs border px-2 py-1 rounded ${managerForId === l.id ? 'bg-green-100 text-green-700 border-green-300' : 'text-green-700 hover:bg-green-50 border-green-300'}`}>
+                            className={`text-xs border px-2 py-1 rounded ${managerForId === l.id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
                             👤 {managerForId === l.id ? 'Cancel' : 'Add User'}
                           </button>
                         )}
                         {canEditLocation && (
                           <button onClick={() => openChainEditor(l.id)}
-                            className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">
+                            className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
                             {chainEditorId === l.id ? 'Close' : '⚙ Chain'}
                           </button>
                         )}
                         {canConfigureEntity && (
                           <button onClick={() => openConfigEditor('location', l.id)}
-                            className="text-xs text-indigo-600 hover:bg-indigo-50 border border-indigo-200 px-2 py-1 rounded">
+                            className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
                             {isConfigOpen(configEditor, 'location', l.id) ? 'Close' : '⚙ Config'}
                           </button>
                         )}
@@ -1075,14 +1078,14 @@ export default function EntitiesPage() {
 
                     {/* Tower row */}
                     {editEntityId === t.id ? (
-                      <div className="px-5 py-3 bg-blue-50 border-b border-blue-100">
+                      <div className="px-5 py-3 bg-primary-muted border-b border-primary-border">
                         <div className="flex items-center gap-2">
                           <input value={editEntityForm.name} onChange={e => setEditEntityForm({ ...editEntityForm, name: e.target.value })}
-                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white font-semibold" placeholder="Tower name" />
+                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white font-semibold" placeholder="Tower name" />
                           <input value={editEntityForm.address} onChange={e => setEditEntityForm({ ...editEntityForm, address: e.target.value })}
-                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white" placeholder="Address" />
+                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white" placeholder="Address" />
                           <button onClick={() => saveEntityEdit('tower', t.id)}
-                            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+                            className="px-3 py-1.5 text-xs bg-primary text-white rounded hover:bg-primary-hover">Save</button>
                           <button onClick={() => setEditEntityId(null)}
                             className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                         </div>
@@ -1090,12 +1093,12 @@ export default function EntitiesPage() {
                     ) : (
                       <div className="flex items-center justify-between px-5 py-4 gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(t.id, 'tower')}>
-                          <EntityAvatar name={t.name} imageUrl={t.image_url} />
+                          <EntityAvatar name={t.name} imageUrl={t.image_url} uploadProgress={getProgress(t.id)} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-gray-400">{isOpen ? '▾' : '▸'}</span>
                               <div className="font-semibold text-gray-900">{t.name}</div>
-                              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                              <span className="text-xs bg-primary-muted text-primary px-2 py-0.5 rounded-full">
                                 {t.company_count} {t.company_count === 1 ? 'company' : 'companies'}
                               </span>
                             </div>
@@ -1144,8 +1147,8 @@ export default function EntitiesPage() {
                               onClick={() => openChildCreateForm('company', t.id)}
                               className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
                                 activeCreateType === 'company' && expanded === t.id
-                                  ? 'bg-gray-200 text-gray-800'
-                                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                                  ? 'bg-primary-muted text-primary'
+                                  : 'bg-primary text-white hover:bg-primary-hover'
                               }`}
                             >
                               {activeCreateType === 'company' && expanded === t.id ? 'Cancel' : '+ Add Company'}
@@ -1164,14 +1167,14 @@ export default function EntitiesPage() {
                             {list.map(c => (
                               <div key={c.id}>
                                 {editEntityId === c.id ? (
-                                  <div className="bg-blue-50 rounded-lg border border-blue-200 px-3 py-2">
+                                  <div className="bg-primary-muted rounded-lg border border-primary-border px-3 py-2">
                                     <div className="flex items-center gap-2">
                                       <input value={editEntityForm.name} onChange={e => setEditEntityForm({ ...editEntityForm, name: e.target.value })}
-                                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white font-medium" />
+                                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white font-medium" />
                                       <input value={editEntityForm.address} onChange={e => setEditEntityForm({ ...editEntityForm, address: e.target.value })}
-                                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white" placeholder="Address" />
+                                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white" placeholder="Address" />
                                       <button onClick={() => saveEntityEdit('company', c.id, t.id)}
-                                        className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+                                        className="px-3 py-1.5 text-xs bg-primary text-white rounded hover:bg-primary-hover">Save</button>
                                       <button onClick={() => setEditEntityId(null)}
                                         className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                                     </div>
@@ -1179,12 +1182,12 @@ export default function EntitiesPage() {
                                 ) : (
                                   <div className="bg-white rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                                      <EntityAvatar name={c.name} imageUrl={c.image_url} size="sm" />
+                                      <EntityAvatar name={c.name} imageUrl={c.image_url} size="sm" uploadProgress={getProgress(c.id)} />
                                       <div className="min-w-0">
                                         <div className="font-medium text-sm text-gray-900">{c.name}</div>
                                         {c.address && <div className="text-xs text-gray-500">{c.address}</div>}
                                         <div className="text-xs mt-1 flex items-center gap-2 flex-wrap">
-                                          <span className={`px-2 py-0.5 rounded-full ${c.approval_chain?.bypass_enabled ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                          <span className={`px-2 py-0.5 rounded-full ${c.approval_chain?.bypass_enabled ? 'bg-warning-light text-warning' : 'bg-gray-100 text-gray-500'}`}>
                                             Bypass {c.approval_chain?.bypass_enabled ? 'ON' : 'OFF'}
                                           </span>
                                           <span className="text-gray-500">{c.approval_chain?.steps?.length || 0} step(s)</span>
@@ -1196,6 +1199,7 @@ export default function EntitiesPage() {
                                         entityType="company"
                                         entityId={c.id}
                                         onUploaded={(url) => url && updateEntityImage('company', c.id, url, t.id)}
+                                        onProgressChange={onProgressChange(c.id)}
                                       />
                                       <EmployeeCsvUploadButton
                                         mode="child"
@@ -1205,29 +1209,29 @@ export default function EntitiesPage() {
                                       />
                                       {canEditCompany && (
                                         <button onClick={() => openEditEntity(c.id, c.name, c.address)}
-                                          className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">Edit</button>
+                                          className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">Edit</button>
                                       )}
                                       {canAddCompanyManager && (
                                         <button onClick={() => managerForId === c.id ? setManagerForId(null) : openManager(c.id)}
-                                          className={`text-xs border px-2 py-1 rounded ${managerForId === c.id ? 'bg-green-100 text-green-700 border-green-300' : 'text-green-700 hover:bg-green-50 border-green-300'}`}>
+                                          className={`text-xs border px-2 py-1 rounded ${managerForId === c.id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
                                           👤 {managerForId === c.id ? 'Cancel' : 'Add User'}
                                         </button>
                                       )}
                                       {canEditCompany && (
                                         <button onClick={() => openChainEditor(c.id)}
-                                          className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">
+                                          className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
                                           {chainEditorId === c.id ? 'Close' : '⚙ Chain'}
                                         </button>
                                       )}
                                       {canConfigureEntity && (
                                         <button onClick={() => openConfigEditor('company', c.id)}
-                                          className="text-xs text-indigo-600 hover:bg-indigo-50 border border-indigo-200 px-2 py-1 rounded">
+                                          className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
                                           {isConfigOpen(configEditor, 'company', c.id) ? 'Close' : '⚙ Config'}
                                         </button>
                                       )}
                                       {canDeleteCompany && (
                                         <button onClick={() => deleteCompany(c.id, c.name, t.id)}
-                                          className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded">Delete</button>
+                                          className="text-xs text-danger hover:bg-danger-light px-2 py-1 rounded">Delete</button>
                                       )}
                                     </div>
                                   </div>
@@ -1295,14 +1299,14 @@ export default function EntitiesPage() {
 
                     {/* Org row */}
                     {editEntityId === o.id ? (
-                      <div className="px-5 py-3 bg-blue-50 border-b border-blue-100">
+                      <div className="px-5 py-3 bg-primary-muted border-b border-primary-border">
                         <div className="flex items-center gap-2">
                           <input value={editEntityForm.name} onChange={e => setEditEntityForm({ ...editEntityForm, name: e.target.value })}
-                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white font-semibold" placeholder="Organization name" />
+                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white font-semibold" placeholder="Organization name" />
                           <input value={editEntityForm.address} onChange={e => setEditEntityForm({ ...editEntityForm, address: e.target.value })}
-                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white" placeholder="Address" />
+                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white" placeholder="Address" />
                           <button onClick={() => saveEntityEdit('org', o.id)}
-                            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+                            className="px-3 py-1.5 text-xs bg-primary text-white rounded hover:bg-primary-hover">Save</button>
                           <button onClick={() => setEditEntityId(null)}
                             className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                         </div>
@@ -1310,12 +1314,12 @@ export default function EntitiesPage() {
                     ) : (
                       <div className="flex items-center justify-between px-5 py-4 gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(o.id, 'org')}>
-                          <EntityAvatar name={o.name} imageUrl={o.image_url} />
+                          <EntityAvatar name={o.name} imageUrl={o.image_url} uploadProgress={getProgress(o.id)} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-gray-400">{isOpen ? '▾' : '▸'}</span>
                               <div className="font-semibold text-gray-900">{o.name}</div>
-                              <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">
+                              <span className="text-xs bg-primary-muted text-primary px-2 py-0.5 rounded-full">
                                 {o.location_count} {o.location_count === 1 ? 'location' : 'locations'}
                               </span>
                             </div>
@@ -1364,8 +1368,8 @@ export default function EntitiesPage() {
                               onClick={() => openChildCreateForm('location', o.id)}
                               className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
                                 activeCreateType === 'location' && expanded === o.id
-                                  ? 'bg-gray-200 text-gray-800'
-                                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                                  ? 'bg-primary-muted text-primary'
+                                  : 'bg-primary text-white hover:bg-primary-hover'
                               }`}
                             >
                               {activeCreateType === 'location' && expanded === o.id ? 'Cancel' : '+ Add Location'}
@@ -1384,14 +1388,14 @@ export default function EntitiesPage() {
                             {list.map(l => (
                               <div key={l.id}>
                                 {editEntityId === l.id ? (
-                                  <div className="bg-blue-50 rounded-lg border border-blue-200 px-3 py-2">
+                                  <div className="bg-primary-muted rounded-lg border border-primary-border px-3 py-2">
                                     <div className="flex items-center gap-2">
                                       <input value={editEntityForm.name} onChange={e => setEditEntityForm({ ...editEntityForm, name: e.target.value })}
-                                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white font-medium" />
+                                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white font-medium" />
                                       <input value={editEntityForm.address} onChange={e => setEditEntityForm({ ...editEntityForm, address: e.target.value })}
-                                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white" placeholder="Address" />
+                                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary bg-white" placeholder="Address" />
                                       <button onClick={() => saveEntityEdit('location', l.id, undefined, o.id)}
-                                        className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+                                        className="px-3 py-1.5 text-xs bg-primary text-white rounded hover:bg-primary-hover">Save</button>
                                       <button onClick={() => setEditEntityId(null)}
                                         className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                                     </div>
@@ -1399,12 +1403,12 @@ export default function EntitiesPage() {
                                 ) : (
                                   <div className="bg-white rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                                      <EntityAvatar name={l.name} imageUrl={l.image_url} size="sm" />
+                                      <EntityAvatar name={l.name} imageUrl={l.image_url} size="sm" uploadProgress={getProgress(l.id)} />
                                       <div className="min-w-0">
                                         <div className="font-medium text-sm text-gray-900">{l.name}</div>
                                         {l.address && <div className="text-xs text-gray-500">{l.address}</div>}
                                         <div className="text-xs mt-1 flex items-center gap-2 flex-wrap">
-                                          <span className={`px-2 py-0.5 rounded-full ${l.approval_chain?.bypass_enabled ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                          <span className={`px-2 py-0.5 rounded-full ${l.approval_chain?.bypass_enabled ? 'bg-warning-light text-warning' : 'bg-gray-100 text-gray-500'}`}>
                                             Bypass {l.approval_chain?.bypass_enabled ? 'ON' : 'OFF'}
                                           </span>
                                           <span className="text-gray-500">{l.approval_chain?.steps?.length || 0} step(s)</span>
@@ -1416,6 +1420,7 @@ export default function EntitiesPage() {
                                         entityType="location"
                                         entityId={l.id}
                                         onUploaded={(url) => url && updateEntityImage('location', l.id, url, o.id)}
+                                        onProgressChange={onProgressChange(l.id)}
                                       />
                                       <EmployeeCsvUploadButton
                                         mode="child"
@@ -1425,29 +1430,29 @@ export default function EntitiesPage() {
                                       />
                                       {canEditLocation && (
                                         <button onClick={() => openEditEntity(l.id, l.name, l.address)}
-                                          className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">Edit</button>
+                                          className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">Edit</button>
                                       )}
                                       {canAddLocationManager && (
                                         <button onClick={() => managerForId === l.id ? setManagerForId(null) : openManager(l.id)}
-                                          className={`text-xs border px-2 py-1 rounded ${managerForId === l.id ? 'bg-green-100 text-green-700 border-green-300' : 'text-green-700 hover:bg-green-50 border-green-300'}`}>
+                                          className={`text-xs border px-2 py-1 rounded ${managerForId === l.id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
                                           👤 {managerForId === l.id ? 'Cancel' : 'Add User'}
                                         </button>
                                       )}
                                       {canEditLocation && (
                                         <button onClick={() => openChainEditor(l.id)}
-                                          className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">
+                                          className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
                                           {chainEditorId === l.id ? 'Close' : '⚙ Chain'}
                                         </button>
                                       )}
                                       {canConfigureEntity && (
                                         <button onClick={() => openConfigEditor('location', l.id)}
-                                          className="text-xs text-indigo-600 hover:bg-indigo-50 border border-indigo-200 px-2 py-1 rounded">
+                                          className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
                                           {isConfigOpen(configEditor, 'location', l.id) ? 'Close' : '⚙ Config'}
                                         </button>
                                       )}
                                       {canDeleteLocation && (
                                         <button onClick={() => deleteLocation(l.id, l.name, o.id)}
-                                          className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded">Delete</button>
+                                          className="text-xs text-danger hover:bg-danger-light px-2 py-1 rounded">Delete</button>
                                       )}
                                     </div>
                                   </div>

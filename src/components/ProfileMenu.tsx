@@ -5,6 +5,7 @@ import { canUploadSelfImage } from '@/lib/auth';
 import EntityAvatar from '@/components/EntityAvatar';
 import SelfProfileImageUpload from '@/components/SelfProfileImageUpload';
 import ImagePreviewModal from '@/components/ImagePreviewModal';
+import UploadProgressOverlay from '@/components/UploadProgressOverlay';
 
 type UserInfo = { id: string; name: string; email: string };
 
@@ -22,6 +23,7 @@ export default function ProfileMenu({
   const [lightbox, setLightbox] = useState(false);
   const [canUpload, setCanUpload] = useState(false);
   const [ready, setReady] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const src = mediaSrc(profileImageUrl, profileImageVersion);
@@ -58,7 +60,7 @@ export default function ProfileMenu({
         <button
           type="button"
           onClick={() => setOpen(v => !v)}
-          className="flex items-center gap-2 rounded-full p-0.5 hover:bg-gray-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="flex items-center gap-2 rounded-full p-0.5 hover:bg-gray-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           aria-expanded={open}
           aria-haspopup="true"
           aria-label="Open profile menu"
@@ -67,6 +69,7 @@ export default function ProfileMenu({
             name={user.name}
             imageUrl={profileImageUrl}
             imageVersion={profileImageVersion}
+            uploadProgress={uploadProgress}
             size="md"
           />
           <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] md:max-w-[160px] truncate">
@@ -95,8 +98,8 @@ export default function ProfileMenu({
               <button
                 type="button"
                 onClick={() => src && setLightbox(true)}
-                disabled={!src}
-                className={`w-full aspect-square max-h-48 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center mb-3 transition-opacity ${
+                disabled={!src && uploadProgress == null}
+                className={`relative w-full aspect-square max-h-48 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center mb-3 transition-opacity ${
                   src ? 'cursor-zoom-in hover:opacity-95' : 'cursor-default opacity-80'
                 }`}
                 title={src ? 'View full size' : undefined}
@@ -109,7 +112,10 @@ export default function ProfileMenu({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <EntityAvatar name={user.name} imageUrl={null} size="lg" />
+                  <EntityAvatar name={user.name} imageUrl={null} size="lg" uploadProgress={uploadProgress} />
+                )}
+                {uploadProgress != null && src && (
+                  <UploadProgressOverlay progress={uploadProgress} roundedClass="rounded-xl" />
                 )}
               </button>
 
@@ -117,7 +123,7 @@ export default function ProfileMenu({
                 <button
                   type="button"
                   onClick={() => setLightbox(true)}
-                  className="w-full mb-3 text-xs text-blue-600 hover:text-blue-700 font-medium py-1"
+                  className="w-full mb-3 text-xs text-primary hover:text-primary font-medium py-1"
                 >
                   View full size
                 </button>
@@ -126,7 +132,8 @@ export default function ProfileMenu({
               {ready && canUpload && (
                 <SelfProfileImageUpload
                   onUploaded={(url) => onProfileImageChange(url)}
-                  className="w-full text-sm text-violet-700 hover:bg-violet-50 border border-violet-200 px-3 py-2 rounded-lg transition-colors disabled:opacity-50 text-center block"
+                  onProgressChange={setUploadProgress}
+                  className="w-full text-sm text-primary hover:bg-primary-muted border border-primary-border px-3 py-2 rounded-lg transition-colors disabled:opacity-50 text-center block"
                 />
               )}
 

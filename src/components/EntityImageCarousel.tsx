@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { mediaSrc } from '@/lib/api';
 import EntityAvatar from '@/components/EntityAvatar';
+import UploadProgressOverlay from '@/components/UploadProgressOverlay';
 
 export type EntityImage = { id: string; image_url: string; created_at: string };
 
@@ -9,6 +10,7 @@ type Props = {
   entityName: string;
   images: EntityImage[];
   loading?: boolean;
+  uploadProgress?: number | null;
   className?: string;
   compact?: boolean;
   hero?: boolean;
@@ -36,7 +38,7 @@ function formatDate(iso: string) {
 }
 
 export default function EntityImageCarousel({
-  entityName, images, loading, className, compact, hero, autoPlay, overlay,
+  entityName, images, loading, uploadProgress, className, compact, hero, autoPlay, overlay,
 }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [initialReady, setInitialReady] = useState(false);
@@ -125,11 +127,24 @@ export default function EntityImageCarousel({
               {overlay}
             </div>
           )}
-          <EntityAvatar name={entityName} size="lg" />
+          <EntityAvatar name={entityName} size="lg" uploadProgress={uploadProgress} />
           <div>
             <p className="text-sm font-medium text-gray-700">No entity images yet</p>
             <p className="text-xs text-gray-500 mt-0.5">Upload images for this entity to see them here</p>
           </div>
+          {uploadProgress != null && (
+            <div className="w-full max-w-xs px-4">
+              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-[width] duration-150"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {uploadProgress >= 95 ? 'Processing on server…' : `Uploading ${uploadProgress}%`}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -204,9 +219,13 @@ export default function EntityImageCarousel({
         )}
 
         {activeIndex === 0 && count > 0 && (
-          <span className={`absolute top-3 left-3 z-10 font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full bg-blue-600 text-white shadow-sm ${hero ? 'text-[11px]' : 'text-[10px]'}`}>
+          <span className={`absolute top-3 left-3 z-10 font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full bg-primary text-white shadow-sm ${hero ? 'text-[11px]' : 'text-[10px]'}`}>
             Latest
           </span>
+        )}
+
+        {uploadProgress != null && (
+          <UploadProgressOverlay progress={uploadProgress} roundedClass={frameRadius} />
         )}
 
         {hero && overlay && (

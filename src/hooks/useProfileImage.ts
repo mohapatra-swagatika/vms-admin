@@ -25,8 +25,8 @@ export function useProfileImage() {
       .then((data: { profile_image_url?: string | null }) => {
         const apiUrl = data.profile_image_url ?? null;
         if (!apiUrl) return;
-        setUrl(apiUrl);
-        if (apiUrl !== stored.url) setVersion(Date.now());
+        // Prefer a fresh signed URL from the API (stored URLs expire).
+        apply(apiUrl, Date.now());
       })
       .catch(() => { /* use cached value */ });
 

@@ -39,7 +39,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white text-2xl mb-4 font-bold">V</div>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-white text-2xl mb-4 font-bold">V</div>
           <h1 className="text-2xl font-bold text-gray-900">VMS Admin Portal</h1>
           <p className="text-sm text-gray-500 mt-1">Visitor Management System · ThinkSys</p>
         </div>
@@ -48,7 +48,7 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Sign in to your account</h2>
           {info && (
-            <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-3 py-2 rounded-lg flex items-center gap-2">
+            <div className="mb-4 bg-warning-light border border-warning-border text-warning text-sm px-3 py-2 rounded-lg flex items-center gap-2">
               <span>⚠️</span> {info}
             </div>
           )}
@@ -57,7 +57,7 @@ export default function LoginPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="email@example.com"
               />
             </div>
@@ -65,18 +65,18 @@ export default function LoginPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)} required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">{error}</div>
+              <div className="bg-danger-light border border-danger-border text-danger text-sm px-3 py-2 rounded-lg">{error}</div>
             )}
 
             <button
               type="submit" disabled={loading}
-              className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>

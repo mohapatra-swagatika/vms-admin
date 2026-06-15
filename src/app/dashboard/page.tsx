@@ -13,7 +13,10 @@ import {
   type ScopedEntityType,
 } from '@/lib/auth';
 import { api } from '@/lib/api';
+import { readEntityGalleryCache, writeEntityGalleryCache } from '@/lib/entityGalleryCache';
 import EntityImageCarousel, { type EntityImage } from '@/components/EntityImageCarousel';
+import EntityImageUploadButton from '@/components/EntityImageUploadButton';
+import EmployeeCsvUploadButton from '@/components/EmployeeCsvUploadButton';
 
 type Assignment = ReturnType<typeof getAssignments>[number];
 
@@ -89,20 +92,34 @@ export default function DashboardPage() {
   const [scopedEntity, setScopedEntity] = useState<ReturnType<typeof getScopedEntity>>(null);
   const [entityImages, setEntityImages] = useState<EntityImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
+  const [entityUploadProgress, setEntityUploadProgress] = useState<number | null>(null);
   const [today, setToday] = useState('');
 
   const loadEntityGallery = useCallback(async (entity: NonNullable<ReturnType<typeof getScopedEntity>>) => {
-    setImagesLoading(true);
+    const cached = readEntityGalleryCache(entity.type, entity.id);
+    if (cached) {
+      setScopedEntityName(cached.entity_name ?? getScopedEntityLabel(entity.type));
+      setEntityImages(cached.images ?? []);
+      setImagesLoading(false);
+    } else {
+      setImagesLoading(true);
+    }
+
     try {
       const [name, data] = await Promise.all([
         resolveScopeName(entity.type, entity.id),
         api.getEntityImages(entity.type, entity.id),
       ]);
-      setScopedEntityName(name ?? getScopedEntityLabel(entity.type));
-      setEntityImages(data.images ?? []);
+      const resolvedName = name ?? data.entity_name ?? getScopedEntityLabel(entity.type);
+      const images = data.images ?? [];
+      setScopedEntityName(resolvedName);
+      setEntityImages(images);
+      writeEntityGalleryCache(entity.type, entity.id, { entity_name: resolvedName, images });
     } catch {
-      setScopedEntityName(getScopedEntityLabel(entity.type));
-      setEntityImages([]);
+      if (!cached) {
+        setScopedEntityName(getScopedEntityLabel(entity.type));
+        setEntityImages([]);
+      }
     } finally {
       setImagesLoading(false);
     }
@@ -142,9 +159,9 @@ export default function DashboardPage() {
 
       try {
         if (can('user:read')) {
-          const { users } = await api.getUsers();
+          const { pagination } = await api.getUsers({ limit: 1, page: 1 });
           next.push({
-            label: 'Users', value: String(users.length), href: '/dashboard/users',
+            label: 'Users', value: String(pagination?.total ?? 0), href: '/dashboard/users',
             icon: '👥', accent: 'from-blue-500/10 to-indigo-500/5 border-blue-200/60',
           });
         }
@@ -181,8 +198,8 @@ export default function DashboardPage() {
         }
 
         if (can('role:read')) {
-          const { roles } = await api.getRoles();
-          const custom = roles.filter((r: { is_system: boolean }) => !r.is_system);
+          const { roles } = await api.getRoles({ limit: 100 });
+          const custom = (roles ?? []).filter((r: { is_system: boolean }) => !r.is_system);
           next.push({
             label: 'Custom roles', value: String(custom.length), href: '/dashboard/roles',
             icon: '🔑', accent: 'from-fuchsia-500/10 to-pink-500/5 border-fuchsia-200/60',
@@ -201,7 +218,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-full bg-gradient-to-b from-slate-50 via-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Hero — client-only branch (auth state lives in localStorage) */}
         {!mounted ? (
           <HeroSkeleton />
         ) : scopedEntity ? (
@@ -210,6 +226,7 @@ export default function DashboardPage() {
               entityName={scopedEntityName || getScopedEntityLabel(scopedEntity.type)}
               images={entityImages}
               loading={imagesLoading}
+              uploadProgress={entityUploadProgress}
               hero
               autoPlay
               overlay={(
@@ -232,13 +249,22 @@ export default function DashboardPage() {
                   <p className="text-sm text-white/75 mt-1">
                     {getScopedEntityLabel(scopedEntity.type)} · Welcome back, {user?.name?.split(' ')[0] || 'there'}
                   </p>
-                  <Link
-                    href="/dashboard/entities"
-                    className="inline-flex items-center gap-1 mt-3 text-xs font-medium text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    Manage entity
-                    <span aria-hidden>→</span>
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                    <Link
+                      href="/dashboard/entities"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Manage entity
+                      <span aria-hidden>→</span>
+                    </Link>
+                    <EntityImageUploadButton
+                      entityType={scopedEntity.type}
+                      entityId={scopedEntity.id}
+                      onUploaded={() => loadEntityGallery(scopedEntity)}
+                      onProgressChange={setEntityUploadProgress}
+                      className="text-xs text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                    />
+                  </div>
                 </div>
               )}
             />
@@ -273,7 +299,26 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* Stats bento */}
+        {scopedEntity && (
+          <section className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/80 shadow-sm p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900">Import Employees</h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Upload a CSV to add employees to your {getScopedEntityLabel(scopedEntity.type).toLowerCase()}.
+                </p>
+              </div>
+              <EmployeeCsvUploadButton
+                mode="self"
+                entityType={scopedEntity.type}
+                entityId={scopedEntity.id}
+                showTemplateLink
+                className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              />
+            </div>
+          </section>
+        )}
+
         {(statsLoading || stats.length > 0) && (
           <section>
             <div className="flex items-center justify-between mb-3">
@@ -305,7 +350,6 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* Bottom panels */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {assignments.length > 0 && (
             <section className="lg:col-span-3 bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">

@@ -20,7 +20,7 @@ export default function AppHeader() {
     <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-white/95 backdrop-blur-sm border-b border-gray-200">
       <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-4">
         <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
             V
           </div>
           <div className="min-w-0 hidden sm:block">
@@ -37,7 +37,7 @@ export default function AppHeader() {
               title={item.label}
               className={`shrink-0 px-2.5 py-1.5 rounded-lg text-base transition-colors ${
                 pathname === item.href
-                  ? 'bg-blue-50 text-blue-700'
+                  ? 'bg-primary-muted text-primary'
                   : 'text-gray-500 hover:bg-gray-100'
               }`}
             >

@@ -42,8 +42,8 @@ function Toggle({
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-          checked ? 'bg-blue-600' : 'bg-gray-300'
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          checked ? 'bg-primary' : 'bg-gray-300'
         }`}
       >
         <span
@@ -90,7 +90,7 @@ function RecipientPicker({
     <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{label}</div>
-        <button type="button" onClick={selectAll} className="text-xs text-indigo-600 hover:underline">
+        <button type="button" onClick={selectAll} className="text-xs text-primary hover:underline">
           Select all
         </button>
       </div>
@@ -106,7 +106,7 @@ function RecipientPicker({
                 type="checkbox"
                 checked={checked}
                 onChange={() => toggleUser(user.id)}
-                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                className="rounded border-gray-300 text-primary focus:ring-primary"
               />
               <span className="min-w-0 flex-1">
               <span className="font-medium">{user.name}</span>
@@ -203,7 +203,7 @@ export default function EntityConfigEditor({
 
   if (loading || !config) {
     return (
-      <div className="bg-white rounded-2xl border border-indigo-200 shadow-sm p-6 text-sm text-gray-500">
+      <div className="bg-white rounded-2xl border border-primary-border shadow-sm p-6 text-sm text-gray-500">
         Loading configuration…
       </div>
     );
@@ -213,7 +213,7 @@ export default function EntityConfigEditor({
   const fdUsers = recipients?.front_desk || [];
 
   return (
-    <div className="bg-white rounded-2xl border border-indigo-200 shadow-sm p-6">
+    <div className="bg-white rounded-2xl border border-primary-border shadow-sm p-6">
       <div className="flex items-start justify-between mb-5">
         <div>
           <h3 className="text-base font-semibold text-gray-900">Admin Configuration</h3>
@@ -223,10 +223,10 @@ export default function EntityConfigEditor({
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg">{error}</div>
+        <div className="mb-4 alert-danger text-xs px-3 py-2 rounded-lg">{error}</div>
       )}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 text-xs text-blue-900">
+      <div className="bg-primary-muted border border-primary-border rounded-xl p-4 mb-5 text-xs text-primary">
         Choose who receives alerts for new visitor requests and which delivery channels are used.
         Changes apply immediately to new requests.
       </div>
@@ -308,7 +308,7 @@ export default function EntityConfigEditor({
                   Math.max(MIN_TIMEOUT_MINUTES, parseInt(e.target.value, 10) || MIN_TIMEOUT_MINUTES),
                 ),
               } : prev)}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+              className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary"
             />
             <span className="text-xs text-gray-500">minutes ({MIN_TIMEOUT_MINUTES}–{MAX_TIMEOUT_MINUTES})</span>
           </div>
@@ -325,7 +325,7 @@ export default function EntityConfigEditor({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-60"
+          className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-60"
         >
           {saving ? 'Saving…' : 'Save Configuration'}
         </button>

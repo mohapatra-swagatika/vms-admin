@@ -15,21 +15,21 @@ export default function EmployeeCsvImportResult({ result, onDismiss, className }
     <div
       className={`rounded-xl border p-4 ${
         success && !hasErrors
-          ? 'bg-emerald-50 border-emerald-200'
+          ? 'bg-success-light border-success-border'
           : success && hasErrors
-            ? 'bg-amber-50 border-amber-200'
-            : 'bg-red-50 border-red-200'
+            ? 'bg-warning-light border-warning-border'
+            : 'bg-danger-light border-danger-border'
       } ${className ?? ''}`}
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <div>
           <div className={`text-sm font-semibold ${
-            success && !hasErrors ? 'text-emerald-800' : success ? 'text-amber-800' : 'text-red-800'
+            success && !hasErrors ? 'text-success' : success ? 'text-warning' : 'text-danger'
           }`}>
             {success && !hasErrors ? '✓ Import successful' : success ? '⚠ Import completed with errors' : '✕ Import failed'}
           </div>
           <p className={`text-sm mt-0.5 ${
-            success && !hasErrors ? 'text-emerald-700' : success ? 'text-amber-700' : 'text-red-700'
+            success && !hasErrors ? 'text-success' : success ? 'text-warning' : 'text-danger'
           }`}>
             {result.summary}
           </p>
@@ -65,7 +65,7 @@ export default function EmployeeCsvImportResult({ result, onDismiss, className }
                   <tr key={`${err.row}-${i}`} className="border-t border-gray-100">
                     <td className="px-3 py-1.5 font-mono text-gray-700">{err.row}</td>
                     <td className="px-3 py-1.5 text-gray-600">{err.email || '—'}</td>
-                    <td className="px-3 py-1.5 text-red-700">{err.message}</td>
+                    <td className="px-3 py-1.5 text-danger">{err.message}</td>
                   </tr>
                 ))}
               </tbody>
