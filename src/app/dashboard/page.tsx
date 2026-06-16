@@ -17,6 +17,16 @@ import { readEntityGalleryCache, writeEntityGalleryCache } from '@/lib/entityGal
 import EntityImageCarousel, { type EntityImage } from '@/components/EntityImageCarousel';
 import EntityImageUploadButton from '@/components/EntityImageUploadButton';
 import EmployeeCsvUploadButton from '@/components/EmployeeCsvUploadButton';
+import {
+  Building,
+  Building2,
+  Contact,
+  KeyRound,
+  MapPin,
+  Store,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 
 type Assignment = ReturnType<typeof getAssignments>[number];
 
@@ -24,7 +34,7 @@ type OverviewStat = {
   label: string;
   value: string;
   href: string;
-  icon: string;
+  icon: LucideIcon;
   accent: string;
 };
 
@@ -162,7 +172,7 @@ export default function DashboardPage() {
           const { pagination } = await api.getUsers({ limit: 1, page: 1 });
           next.push({
             label: 'Users', value: String(pagination?.total ?? 0), href: '/dashboard/users',
-            icon: '👥', accent: 'from-blue-500/10 to-indigo-500/5 border-blue-200/60',
+            icon: Users, accent: 'from-blue-500/10 to-indigo-500/5 border-blue-200/60',
           });
         }
 
@@ -173,7 +183,7 @@ export default function DashboardPage() {
           const { pagination } = await api.getEmployees(params);
           next.push({
             label: 'Employees', value: String(pagination?.total ?? 0), href: '/dashboard/employees',
-            icon: '👷', accent: 'from-emerald-500/10 to-teal-500/5 border-emerald-200/60',
+            icon: Contact, accent: 'from-emerald-500/10 to-teal-500/5 border-emerald-200/60',
           });
         }
 
@@ -183,17 +193,17 @@ export default function DashboardPage() {
               api.getTowers(), api.getOrganizations(), api.getCompanies(), api.getLocations(),
             ]);
             next.push(
-              { label: 'Towers', value: String(towers.length), href: '/dashboard/entities', icon: '🏗️', accent: 'from-teal-500/10 to-cyan-500/5 border-teal-200/60' },
-              { label: 'Organizations', value: String(organizations.length), href: '/dashboard/entities', icon: '🏢', accent: 'from-violet-500/10 to-purple-500/5 border-violet-200/60' },
-              { label: 'Companies', value: String(companies.length), href: '/dashboard/entities', icon: '🏬', accent: 'from-sky-500/10 to-blue-500/5 border-sky-200/60' },
-              { label: 'Locations', value: String(locations.length), href: '/dashboard/entities', icon: '📍', accent: 'from-amber-500/10 to-orange-500/5 border-amber-200/60' },
+              { label: 'Towers', value: String(towers.length), href: '/dashboard/entities', icon: Building, accent: 'from-teal-500/10 to-cyan-500/5 border-teal-200/60' },
+              { label: 'Organizations', value: String(organizations.length), href: '/dashboard/entities', icon: Building2, accent: 'from-violet-500/10 to-purple-500/5 border-violet-200/60' },
+              { label: 'Companies', value: String(companies.length), href: '/dashboard/entities', icon: Store, accent: 'from-sky-500/10 to-blue-500/5 border-sky-200/60' },
+              { label: 'Locations', value: String(locations.length), href: '/dashboard/entities', icon: MapPin, accent: 'from-amber-500/10 to-orange-500/5 border-amber-200/60' },
             );
           } else if (top?.scope_type === 'tower' && top.scope_id) {
             const { companies } = await api.getCompanies(top.scope_id);
-            next.push({ label: 'Companies', value: String(companies.length), href: '/dashboard/entities', icon: '🏬', accent: 'from-sky-500/10 to-blue-500/5 border-sky-200/60' });
+            next.push({ label: 'Companies', value: String(companies.length), href: '/dashboard/entities', icon: Store, accent: 'from-sky-500/10 to-blue-500/5 border-sky-200/60' });
           } else if (top?.scope_type === 'organization' && top.scope_id) {
             const { locations } = await api.getLocations(top.scope_id);
-            next.push({ label: 'Locations', value: String(locations.length), href: '/dashboard/entities', icon: '📍', accent: 'from-amber-500/10 to-orange-500/5 border-amber-200/60' });
+            next.push({ label: 'Locations', value: String(locations.length), href: '/dashboard/entities', icon: MapPin, accent: 'from-amber-500/10 to-orange-500/5 border-amber-200/60' });
           }
         }
 
@@ -202,7 +212,7 @@ export default function DashboardPage() {
           const custom = (roles ?? []).filter((r: { is_system: boolean }) => !r.is_system);
           next.push({
             label: 'Custom roles', value: String(custom.length), href: '/dashboard/roles',
-            icon: '🔑', accent: 'from-fuchsia-500/10 to-pink-500/5 border-fuchsia-200/60',
+            icon: KeyRound, accent: 'from-fuchsia-500/10 to-pink-500/5 border-fuchsia-200/60',
           });
         }
       } catch { /* best-effort */ }
@@ -330,20 +340,20 @@ export default function DashboardPage() {
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="h-[88px] rounded-xl bg-white/60 border border-gray-200/80 animate-pulse" />
                   ))
-                : stats.map(s => (
+                : stats.map(({ label, value, href, icon: Icon, accent }) => (
                     <Link
-                      key={s.label}
-                      href={s.href}
-                      className={`group relative overflow-hidden rounded-xl border bg-gradient-to-br ${s.accent} p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
+                      key={label}
+                      href={href}
+                      className={`group relative overflow-hidden rounded-xl border bg-gradient-to-br ${accent} p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="text-xl opacity-80 group-hover:scale-110 transition-transform">{s.icon}</span>
+                        <Icon className="w-5 h-5 text-gray-500 opacity-80 group-hover:scale-110 transition-transform" aria-hidden />
                         <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity">
                           View →
                         </span>
                       </div>
-                      <div className="mt-2 text-2xl font-bold text-gray-900 tabular-nums">{s.value}</div>
-                      <div className="text-xs font-medium text-gray-600">{s.label}</div>
+                      <div className="mt-2 text-2xl font-bold text-gray-900 tabular-nums">{value}</div>
+                      <div className="text-xs font-medium text-gray-600">{label}</div>
                     </Link>
                   ))}
             </div>

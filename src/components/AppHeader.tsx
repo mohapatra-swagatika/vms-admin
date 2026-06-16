@@ -30,20 +30,23 @@ export default function AppHeader() {
         </Link>
 
         <nav className="flex md:hidden flex-1 justify-center gap-0.5 overflow-x-auto px-1 scrollbar-none">
-          {DASHBOARD_NAV.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={item.label}
-              className={`shrink-0 px-2.5 py-1.5 rounded-lg text-base transition-colors ${
-                pathname === item.href
-                  ? 'bg-primary-muted text-primary'
-                  : 'text-gray-500 hover:bg-gray-100'
-              }`}
-            >
-              {item.icon}
-            </Link>
-          ))}
+          {DASHBOARD_NAV.map(item => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={item.label}
+                className={`shrink-0 px-2.5 py-1.5 rounded-lg transition-colors ${
+                  pathname === item.href
+                    ? 'bg-primary-muted text-primary'
+                    : 'text-gray-500 hover:bg-gray-100'
+                }`}
+              >
+                <Icon className="w-5 h-5" aria-hidden />
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-3 min-w-0 shrink-0">

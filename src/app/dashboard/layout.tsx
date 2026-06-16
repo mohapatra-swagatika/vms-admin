@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { clearAuth, getUser, setPermissions } from '@/lib/auth';
 import AppHeader from '@/components/AppHeader';
+import { LogOut } from 'lucide-react';
 import { DASHBOARD_NAV } from '@/lib/nav';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -36,19 +37,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className="hidden md:flex w-56 bg-white border-r border-gray-200 flex-col shrink-0">
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {DASHBOARD_NAV.map(item => (
-            <Link
-              key={item.href} href={item.href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                pathname === item.href
-                  ? 'bg-primary-muted text-primary font-medium'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+          {DASHBOARD_NAV.map(item => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href} href={item.href}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  pathname === item.href
+                    ? 'bg-primary-muted text-primary font-medium'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" aria-hidden />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="px-4 py-4 border-t border-gray-100">
@@ -62,7 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onClick={logout}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-danger hover:bg-danger-hover rounded-lg transition-colors"
           >
-            <span className="text-base leading-none">⏻</span>
+            <LogOut className="w-4 h-4 shrink-0" aria-hidden />
             Logout
           </button>
         </div>
