@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, validateImageFile } from '@/lib/api';
 import { canUploadSelfImage, getUser, setStoredProfileImage } from '@/lib/auth';
+import { UploadButtonProgress } from '@/components/UploadProgressOverlay';
 
 type Props = {
   onUploaded?: (profileImageUrl: string) => void;
@@ -74,7 +75,11 @@ export default function SelfProfileImageUpload({ onUploaded, onProgressChange, c
         disabled={uploading}
         className={className ?? defaultClass}
       >
-        {uploading ? `Uploading ${progress}%` : '📷 Upload Image'}
+        {uploading ? (
+          <UploadButtonProgress uploading progress={progress} idleLabel="📷 Upload Image" />
+        ) : (
+          '📷 Upload Image'
+        )}
       </button>
     </>
   );

@@ -130,21 +130,12 @@ export default function EntityImageCarousel({
           <EntityAvatar name={entityName} size="lg" uploadProgress={uploadProgress} />
           <div>
             <p className="text-sm font-medium text-gray-700">No entity images yet</p>
-            <p className="text-xs text-gray-500 mt-0.5">Upload images for this entity to see them here</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {uploadProgress != null
+                ? (uploadProgress >= 95 ? 'Processing on server…' : `Uploading… ${uploadProgress}%`)
+                : 'Upload images for this entity to see them here'}
+            </p>
           </div>
-          {uploadProgress != null && (
-            <div className="w-full max-w-xs px-4">
-              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-[width] duration-150"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {uploadProgress >= 95 ? 'Processing on server…' : `Uploading ${uploadProgress}%`}
-              </p>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -225,7 +216,7 @@ export default function EntityImageCarousel({
         )}
 
         {uploadProgress != null && (
-          <UploadProgressOverlay progress={uploadProgress} roundedClass={frameRadius} />
+          <UploadProgressOverlay progress={uploadProgress} variant="panel" roundedClass={frameRadius} />
         )}
 
         {hero && overlay && (

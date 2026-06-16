@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, MAX_ENTITY_IMAGES_PER_UPLOAD, validateImageFile } from '@/lib/api';
 import { canUploadChildEntityImage } from '@/lib/auth';
+import { UploadButtonProgress } from '@/components/UploadProgressOverlay';
 
 export type EntityImageType = 'tower' | 'company' | 'organization' | 'location';
 
@@ -92,7 +93,11 @@ export default function EntityImageUploadButton({ entityType, entityId, onUpload
         className={className ?? defaultClass}
         title={`Select one or more images (max ${MAX_ENTITY_IMAGES_PER_UPLOAD})`}
       >
-        {uploading ? `Uploading ${progress}%` : '📷 Upload Image'}
+        {uploading ? (
+          <UploadButtonProgress uploading progress={progress} idleLabel="📷 Upload Image" />
+        ) : (
+          '📷 Upload Image'
+        )}
       </button>
     </>
   );

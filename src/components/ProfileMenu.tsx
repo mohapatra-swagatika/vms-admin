@@ -115,7 +115,7 @@ export default function ProfileMenu({
                   <EntityAvatar name={user.name} imageUrl={null} size="lg" uploadProgress={uploadProgress} />
                 )}
                 {uploadProgress != null && src && (
-                  <UploadProgressOverlay progress={uploadProgress} roundedClass="rounded-xl" />
+                  <UploadProgressOverlay progress={uploadProgress} variant="panel" roundedClass="rounded-xl" />
                 )}
               </button>
 

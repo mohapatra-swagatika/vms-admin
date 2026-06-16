@@ -32,7 +32,12 @@ export default function EntityAvatar({ name, imageUrl, imageVersion, uploadProgr
           alt=""
           className={`${cls} rounded-full object-cover border border-gray-200 bg-gray-50`}
         />
-        {uploading && <UploadProgressOverlay progress={uploadProgress} />}
+        {uploading && (
+          <UploadProgressOverlay
+            progress={uploadProgress}
+            variant={size === 'lg' ? 'avatar-lg' : 'compact'}
+          />
+        )}
       </div>
     );
   }
@@ -45,7 +50,12 @@ export default function EntityAvatar({ name, imageUrl, imageVersion, uploadProgr
       >
         {name.charAt(0).toUpperCase()}
       </div>
-      {uploading && <UploadProgressOverlay progress={uploadProgress} />}
+      {uploading && (
+        <UploadProgressOverlay
+          progress={uploadProgress}
+          variant={size === 'lg' ? 'avatar-lg' : 'compact'}
+        />
+      )}
     </div>
   );
 }
