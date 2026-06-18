@@ -6,6 +6,8 @@ import {
   type NotificationRecipients,
   type NotifyRecipient,
   type ConfigurableEntityType,
+  type ParentEntityConfig,
+  type EntityConfigResponse,
   CHANNEL_LABELS,
   MIN_TIMEOUT_MINUTES,
   MAX_TIMEOUT_MINUTES,
@@ -123,11 +125,53 @@ function RecipientPicker({
   );
 }
 
+function parentEntityLabel(type: ConfigurableEntityType) {
+  if (type === 'tower') return 'Tower';
+  if (type === 'organization') return 'Organization';
+  if (type === 'company') return 'Company';
+  return 'Location';
+}
+
+function ParentConfigSummary({ parent }: { parent: ParentEntityConfig }) {
+  const { config } = parent;
+  const enabledChannels = (Object.keys(CHANNEL_LABELS) as Array<keyof typeof CHANNEL_LABELS>)
+    .filter(key => config[key])
+    .map(key => CHANNEL_LABELS[key]);
+
+  return (
+    <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+      <div className="text-sm font-semibold text-gray-700 mb-1">Parent configuration</div>
+      <p className="text-xs text-gray-500 mb-3">
+        Inherited from {parentEntityLabel(parent.entity_type)}: <span className="font-medium text-gray-700">{parent.entity_name}</span>
+      </p>
+      <div className="grid gap-2 text-xs text-gray-600 sm:grid-cols-2">
+        <div>
+          <span className="font-medium text-gray-700">Recipients:</span>{' '}
+          {[
+            config.notify_gate && 'Gate',
+            config.notify_front_desk && 'Front desk',
+            config.notify_admin && 'Admin',
+          ].filter(Boolean).join(', ') || 'None'}
+        </div>
+        <div>
+          <span className="font-medium text-gray-700">Channels:</span>{' '}
+          {enabledChannels.length ? enabledChannels.join(', ') : 'None'}
+        </div>
+        <div>
+          <span className="font-medium text-gray-700">Timeout:</span>{' '}
+          {config.request_timeout_minutes} min
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function EntityConfigEditor({
   entityType, entityId, entityName, onSave, onCancel,
 }: Props) {
   const [config, setConfig] = useState<EntityConfig | null>(null);
   const [recipients, setRecipients] = useState<NotificationRecipients | null>(null);
+  const [parent, setParent] = useState<ParentEntityConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -137,10 +181,11 @@ export default function EntityConfigEditor({
     setLoading(true);
     setError('');
     api.getEntityConfig(entityType, entityId)
-      .then((data: { config: EntityConfig; recipients: NotificationRecipients }) => {
+      .then((data: EntityConfigResponse) => {
         if (cancelled) return;
         setConfig(normalizeEntityConfig(data.config));
         setRecipients(data.recipients);
+        setParent(data.parent ?? null);
       })
       .catch((err: unknown) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load configuration');
@@ -230,6 +275,8 @@ export default function EntityConfigEditor({
         Choose who receives alerts for new visitor requests and which delivery channels are used.
         Changes apply immediately to new requests.
       </div>
+
+      {parent && <ParentConfigSummary parent={parent} />}
 
       <div className="mb-5">
         <div className="text-sm font-semibold text-gray-700 mb-2">Notification recipients</div>

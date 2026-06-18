@@ -163,6 +163,30 @@ export function canDeleteEmployee(): boolean {
   return can('employee:delete');
 }
 
+/**
+ * Entity types visible in Visitors filters/forms for the logged-in user.
+ * Same hierarchy rules as employees.
+ */
+export function getVisibleVisitorEntityTypes(): ScopedEntityType[] {
+  return getVisibleEmployeeEntityTypes();
+}
+
+export function canReadVisitors(): boolean {
+  return can('visitor:read');
+}
+
+export function canCreateVisitor(): boolean {
+  return can('visitor:create');
+}
+
+export function canUpdateVisitor(): boolean {
+  return can('visitor:update');
+}
+
+export function canDeleteVisitor(): boolean {
+  return can('visitor:delete');
+}
+
 export function setPermissions(permissions: string[]) {
   if (typeof window === 'undefined') return;
   localStorage.setItem('vms_permissions', JSON.stringify(permissions));

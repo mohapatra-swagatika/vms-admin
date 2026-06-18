@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {
   can,
   canReadEmployees,
+  canReadVisitors,
   getAssignments,
   getUser,
   getTopScope,
@@ -24,9 +25,11 @@ import {
   KeyRound,
   MapPin,
   Store,
+  UserCheck,
   Users,
   type LucideIcon,
 } from 'lucide-react';
+import { visitorsClient } from '@/lib/visitors';
 
 type Assignment = ReturnType<typeof getAssignments>[number];
 
@@ -184,6 +187,17 @@ export default function DashboardPage() {
           next.push({
             label: 'Employees', value: String(pagination?.total ?? 0), href: '/dashboard/employees',
             icon: Contact, accent: 'from-emerald-500/10 to-teal-500/5 border-emerald-200/60',
+          });
+        }
+
+        if (canReadVisitors()) {
+          const params = scoped
+            ? { entity_type: scoped.type, limit: 1, page: 1 }
+            : { limit: 1, page: 1 };
+          const { pagination } = await visitorsClient.listVisitors(params);
+          next.push({
+            label: 'Visitors', value: String(pagination?.total ?? 0), href: '/dashboard/visitors',
+            icon: UserCheck, accent: 'from-orange-500/10 to-rose-500/5 border-orange-200/60',
           });
         }
 

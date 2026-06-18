@@ -85,6 +85,20 @@ export const CHANNEL_LABELS: Record<'whatsapp' | 'email' | 'call' | 'push', stri
 
 export type ConfigurableEntityType = 'tower' | 'organization' | 'company' | 'location';
 
+export type ParentEntityConfig = {
+  entity_type: ConfigurableEntityType;
+  entity_id: string;
+  entity_name: string;
+  config: EntityConfig;
+  recipients: NotificationRecipients;
+};
+
+export type EntityConfigResponse = {
+  config: EntityConfig;
+  recipients: NotificationRecipients;
+  parent: ParentEntityConfig | null;
+};
+
 export const CONFIG_ENTITY_SEGMENT: Record<ConfigurableEntityType, string> = {
   tower: 'towers',
   organization: 'organizations',
