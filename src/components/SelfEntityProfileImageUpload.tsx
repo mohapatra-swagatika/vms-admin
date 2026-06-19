@@ -15,7 +15,6 @@ type Props = {
 const defaultClass =
   'text-xs text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50';
 
-const profileIdleLabel = <IconLabel icon={ImageIcon}>Entity Profile</IconLabel>;
 
 /** Upload profile image for the logged-in user's own scoped entity (dashboard only). */
 export default function SelfEntityProfileImageUpload({
@@ -86,19 +85,6 @@ export default function SelfEntityProfileImageUpload({
         className="hidden"
         onChange={handleFile}
       />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className={className ?? defaultClass}
-        title="Upload profile image for your entity"
-      >
-        {uploading ? (
-          <UploadButtonProgress uploading progress={progress} idleLabel={profileIdleLabel} />
-        ) : (
-          profileIdleLabel
-        )}
-      </button>
     </>
   );
 }
