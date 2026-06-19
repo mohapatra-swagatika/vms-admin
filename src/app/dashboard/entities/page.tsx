@@ -1,8 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { Check, ChevronRight, ClipboardCopy, ChevronDown, GitBranch, Images, Settings, UserPlus, X } from 'lucide-react';
 import { api, mediaSrc } from '@/lib/api';
 import {
   can,
+  galleryManagementHref,
   getTopScope,
   isSupport,
   getCreatableEntityTypes,
@@ -12,12 +15,11 @@ import {
 import ApprovalChainEditor, { ApprovalChain } from '@/components/ApprovalChainEditor';
 import EntityConfigEditor from '@/components/EntityConfigEditor';
 import { type EntityConfig, type ConfigurableEntityType } from '@/lib/entityConfig';
-import EntityImageUploadButton from '@/components/EntityImageUploadButton';
 import EmployeeCsvUploadButton from '@/components/EmployeeCsvUploadButton';
 import EntityAvatar from '@/components/EntityAvatar';
-import { useImageUploadProgress } from '@/hooks/useImageUploadProgress';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import FlashToast from '@/components/FlashToast';
+import { IconLabel } from '@/components/IconLabel';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 
 type Tower        = { id: string; name: string; address: string | null; image_url?: string | null; company_count: number; created_at: string; notify_channels?: EntityConfig | null };
@@ -27,6 +29,9 @@ type Location     = { id: string; organization_id: string; name: string; address
 type Tab          = 'towers' | 'organizations' | 'companies' | 'locations';
 type EntityKind   = 'tower' | 'org' | 'company' | 'location';
 type ConfigEditorTarget = { kind: EntityKind; id: string };
+
+const galleryLinkClass =
+  'text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded transition-colors';
 
 function toConfigEntityType(kind: EntityKind): ConfigurableEntityType {
   return kind === 'org' ? 'organization' : kind;
@@ -51,10 +56,15 @@ function CredentialCard({ result, onDone }: { result: ManagerResult; onDone: () 
     <div className="mt-2 bg-success-light border border-success-border rounded-xl p-4">
       <div className="flex items-start justify-between mb-2">
         <div>
-          <div className="text-sm font-semibold text-success">✓ Manager created for {result.entityName}</div>
+          <div className="text-sm font-semibold text-success flex items-center gap-1.5">
+            <Check className="w-4 h-4 shrink-0" aria-hidden />
+            Manager created for {result.entityName}
+          </div>
           <div className="text-xs text-success mt-0.5">Share these credentials — password won&apos;t be shown again.</div>
         </div>
-        <button onClick={onDone} className="text-success hover:text-success/80 text-lg leading-none">✕</button>
+        <button type="button" onClick={onDone} className="text-success hover:text-success/80 p-0.5" aria-label="Dismiss">
+          <X className="w-4 h-4" aria-hidden />
+        </button>
       </div>
       <div className="bg-white border border-success-border rounded-lg p-3 font-mono text-sm space-y-1">
         <div><span className="text-gray-500 text-xs">Name&nbsp;&nbsp;&nbsp;:</span> {result.name}</div>
@@ -63,9 +73,13 @@ function CredentialCard({ result, onDone }: { result: ManagerResult; onDone: () 
         <div><span className="text-gray-500 text-xs">Role&nbsp;&nbsp;&nbsp;:</span> <span className="text-primary">{result.roleDisplay}</span></div>
       </div>
       <div className="flex justify-end gap-2 mt-3">
-        <button onClick={copy}
-          className="text-xs px-3 py-1.5 border border-success-border text-success rounded-lg hover:bg-success-light">
-          {copied ? '✓ Copied!' : '📋 Copy credentials'}
+        <button type="button" onClick={copy}
+          className="text-xs px-3 py-1.5 border border-success-border text-success rounded-lg hover:bg-success-light inline-flex items-center gap-1.5">
+          {copied ? (
+            <><Check className="w-3.5 h-3.5" aria-hidden /> Copied!</>
+          ) : (
+            <><ClipboardCopy className="w-3.5 h-3.5" aria-hidden /> Copy credentials</>
+          )}
         </button>
         <button onClick={onDone}
           className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary-hover">
@@ -146,7 +160,9 @@ function ManagerForm({
             Creates a new account and assigns a role scoped to this {scopeType}
           </div>
         </div>
-        <button onClick={onCancel} className="text-gray-400 hover:text-primary text-lg leading-none">✕</button>
+        <button type="button" onClick={onCancel} className="text-gray-400 hover:text-primary p-0.5" aria-label="Close">
+          <X className="w-4 h-4" aria-hidden />
+        </button>
       </div>
 
       {err && <div className="mb-3 text-xs alert-danger px-3 py-2 rounded-lg">{err}</div>}
@@ -232,7 +248,11 @@ function ManagerForm({
               {selectedRole.display_name}
             </span>
             <span className="text-gray-400">·</span>
-            <span>Scoped to {scopeType} → <span className="font-medium text-gray-800">{entityName}</span></span>
+            <span className="inline-flex items-center gap-1">
+              Scoped to {scopeType}
+              <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" aria-hidden />
+              <span className="font-medium text-gray-800">{entityName}</span>
+            </span>
           </div>
         )}
 
@@ -253,7 +273,6 @@ function ManagerForm({
 
 // ════════════════════════════════════════════════════════════════════════════
 export default function EntitiesPage() {
-  const { getProgress, onProgressChange } = useImageUploadProgress();
   const { confirm, dialogProps } = useConfirmDialog();
 
   // Scope must be read client-side only (localStorage unavailable on SSR).
@@ -709,40 +728,10 @@ export default function EntitiesPage() {
     setConfigEditor(isConfigOpen(configEditor, kind, id) ? null : { kind, id });
   }
 
-  // ── Shared action button strip for Tower/Org rows ──────────────────────────
-  function updateEntityImage(
-    kind: 'tower' | 'org' | 'company' | 'location',
-    entityId: string,
-    url: string,
-    parentId?: string,
-  ) {
-    if (kind === 'tower') {
-      setTowers(prev => prev.map(t => t.id === entityId ? { ...t, image_url: url } : t));
-    } else if (kind === 'org') {
-      setOrgs(prev => prev.map(o => o.id === entityId ? { ...o, image_url: url } : o));
-    } else if (kind === 'company' && parentId) {
-      setCompanies(prev => ({
-        ...prev,
-        [parentId]: (prev[parentId] || []).map(c => c.id === entityId ? { ...c, image_url: url } : c),
-      }));
-    } else if (kind === 'company') {
-      setFlatCompanies(prev => prev.map(c => c.id === entityId ? { ...c, image_url: url } : c));
-    } else if (kind === 'location' && parentId) {
-      setLocations(prev => ({
-        ...prev,
-        [parentId]: (prev[parentId] || []).map(l => l.id === entityId ? { ...l, image_url: url } : l),
-      }));
-    } else if (kind === 'location') {
-      setFlatLocations(prev => prev.map(l => l.id === entityId ? { ...l, image_url: url } : l));
-    }
-    flash('Image uploaded');
-  }
-
   function ParentActions({
-    id, name, address, kind, onImageUploaded,
+    id, name, address, kind,
   }: {
     id: string; name: string; address: string | null; kind: 'tower' | 'org';
-    onImageUploaded: (url?: string) => void;
   }) {
     const canEdit      = kind === 'tower' ? canEditTower      : canEditOrg;
     const canAddMgr    = kind === 'tower' ? canAddTowerManager : canAddOrgManager;
@@ -750,12 +739,12 @@ export default function EntitiesPage() {
 
     return (
       <div className="flex gap-1 flex-wrap justify-end">
-        <EntityImageUploadButton
-          entityType={kind === 'tower' ? 'tower' : 'organization'}
-          entityId={id}
-          onUploaded={onImageUploaded}
-          onProgressChange={onProgressChange(id)}
-        />
+        <Link
+          href={galleryManagementHref(kind === 'tower' ? 'tower' : 'organization', id)}
+          className={galleryLinkClass}
+        >
+          <IconLabel icon={Images}>Gallery</IconLabel>
+        </Link>
         <EmployeeCsvUploadButton
           mode="child"
           entityType={kind === 'tower' ? 'tower' : 'organization'}
@@ -769,13 +758,13 @@ export default function EntitiesPage() {
         {canAddMgr && (
           <button onClick={() => managerForId === id ? setManagerForId(null) : openManager(id)}
             className={`text-xs border px-2 py-1 rounded ${managerForId === id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
-            👤 {managerForId === id ? 'Cancel' : 'Add User'}
+            <IconLabel icon={UserPlus}>{managerForId === id ? 'Cancel' : 'Add User'}</IconLabel>
           </button>
         )}
         {canConfigureEntity && (
           <button onClick={() => openConfigEditor(kind, id)}
             className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-            {isConfigOpen(configEditor, kind, id) ? 'Close' : '⚙ Config'}
+            {isConfigOpen(configEditor, kind, id) ? 'Close' : <IconLabel icon={Settings}>Config</IconLabel>}
           </button>
         )}
         {canDelete && (
@@ -884,7 +873,7 @@ export default function EntitiesPage() {
                   ) : (
                     <div className="px-5 py-4 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <EntityAvatar name={c.name} imageUrl={c.image_url} uploadProgress={getProgress(c.id)} />
+                        <EntityAvatar name={c.name} imageUrl={c.image_url} />
                         <div className="min-w-0">
                           <div className="font-semibold text-gray-900">{c.name}</div>
                           {c.address && <div className="text-xs text-gray-500 mt-0.5">{c.address}</div>}
@@ -897,9 +886,12 @@ export default function EntitiesPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
-                        <EntityImageUploadButton entityType="company" entityId={c.id}
-                          onUploaded={(url) => url && updateEntityImage('company', c.id, url)}
-                          onProgressChange={onProgressChange(c.id)} />
+                        <Link
+                          href={galleryManagementHref('company', c.id)}
+                          className={galleryLinkClass}
+                        >
+                          <IconLabel icon={Images}>Gallery</IconLabel>
+                        </Link>
                         <EmployeeCsvUploadButton mode="child" entityType="company" entityId={c.id}
                           onImported={() => flash('Employee CSV import finished')} />
                         {canEditCompany && (
@@ -909,19 +901,19 @@ export default function EntitiesPage() {
                         {canAddCompanyManager && (
                           <button onClick={() => managerForId === c.id ? setManagerForId(null) : openManager(c.id)}
                             className={`text-xs border px-2 py-1 rounded ${managerForId === c.id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
-                            👤 {managerForId === c.id ? 'Cancel' : 'Add User'}
+                            <IconLabel icon={UserPlus}>{managerForId === c.id ? 'Cancel' : 'Add User'}</IconLabel>
                           </button>
                         )}
                         {canEditCompany && (
                           <button onClick={() => openChainEditor(c.id)}
                             className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-                            {chainEditorId === c.id ? 'Close' : '⚙ Chain'}
+                            {chainEditorId === c.id ? 'Close' : <IconLabel icon={GitBranch}>Chain</IconLabel>}
                           </button>
                         )}
                         {canConfigureEntity && (
                           <button onClick={() => openConfigEditor('company', c.id)}
                             className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-                            {isConfigOpen(configEditor, 'company', c.id) ? 'Close' : '⚙ Config'}
+                            {isConfigOpen(configEditor, 'company', c.id) ? 'Close' : <IconLabel icon={Settings}>Config</IconLabel>}
                           </button>
                         )}
                       </div>
@@ -986,7 +978,7 @@ export default function EntitiesPage() {
                   ) : (
                     <div className="px-5 py-4 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <EntityAvatar name={l.name} imageUrl={l.image_url} uploadProgress={getProgress(l.id)} />
+                        <EntityAvatar name={l.name} imageUrl={l.image_url} />
                         <div className="min-w-0">
                           <div className="font-semibold text-gray-900">{l.name}</div>
                           {l.address && <div className="text-xs text-gray-500 mt-0.5">{l.address}</div>}
@@ -999,9 +991,12 @@ export default function EntitiesPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
-                        <EntityImageUploadButton entityType="location" entityId={l.id}
-                          onUploaded={(url) => url && updateEntityImage('location', l.id, url)}
-                          onProgressChange={onProgressChange(l.id)} />
+                        <Link
+                          href={galleryManagementHref('location', l.id)}
+                          className={galleryLinkClass}
+                        >
+                          <IconLabel icon={Images}>Gallery</IconLabel>
+                        </Link>
                         <EmployeeCsvUploadButton mode="child" entityType="location" entityId={l.id}
                           onImported={() => flash('Employee CSV import finished')} />
                         {canEditLocation && (
@@ -1011,19 +1006,19 @@ export default function EntitiesPage() {
                         {canAddLocationManager && (
                           <button onClick={() => managerForId === l.id ? setManagerForId(null) : openManager(l.id)}
                             className={`text-xs border px-2 py-1 rounded ${managerForId === l.id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
-                            👤 {managerForId === l.id ? 'Cancel' : 'Add User'}
+                            <IconLabel icon={UserPlus}>{managerForId === l.id ? 'Cancel' : 'Add User'}</IconLabel>
                           </button>
                         )}
                         {canEditLocation && (
                           <button onClick={() => openChainEditor(l.id)}
                             className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-                            {chainEditorId === l.id ? 'Close' : '⚙ Chain'}
+                            {chainEditorId === l.id ? 'Close' : <IconLabel icon={GitBranch}>Chain</IconLabel>}
                           </button>
                         )}
                         {canConfigureEntity && (
                           <button onClick={() => openConfigEditor('location', l.id)}
                             className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-                            {isConfigOpen(configEditor, 'location', l.id) ? 'Close' : '⚙ Config'}
+                            {isConfigOpen(configEditor, 'location', l.id) ? 'Close' : <IconLabel icon={Settings}>Config</IconLabel>}
                           </button>
                         )}
                       </div>
@@ -1093,10 +1088,14 @@ export default function EntitiesPage() {
                     ) : (
                       <div className="flex items-center justify-between px-5 py-4 gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(t.id, 'tower')}>
-                          <EntityAvatar name={t.name} imageUrl={t.image_url} uploadProgress={getProgress(t.id)} />
+                          <EntityAvatar name={t.name} imageUrl={t.image_url} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-gray-400">{isOpen ? '▾' : '▸'}</span>
+                              <span className="text-gray-400">
+                                {isOpen
+                                  ? <ChevronDown className="w-4 h-4" aria-hidden />
+                                  : <ChevronRight className="w-4 h-4" aria-hidden />}
+                              </span>
                               <div className="font-semibold text-gray-900">{t.name}</div>
                               <span className="text-xs bg-primary-muted text-primary px-2 py-0.5 rounded-full">
                                 {t.company_count} {t.company_count === 1 ? 'company' : 'companies'}
@@ -1107,7 +1106,6 @@ export default function EntitiesPage() {
                         </div>
                         <ParentActions
                           id={t.id} name={t.name} address={t.address} kind="tower"
-                          onImageUploaded={(url) => url && updateEntityImage('tower', t.id, url)}
                         />
                       </div>
                     )}
@@ -1182,7 +1180,7 @@ export default function EntitiesPage() {
                                 ) : (
                                   <div className="bg-white rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                                      <EntityAvatar name={c.name} imageUrl={c.image_url} size="sm" uploadProgress={getProgress(c.id)} />
+                                      <EntityAvatar name={c.name} imageUrl={c.image_url} size="sm" />
                                       <div className="min-w-0">
                                         <div className="font-medium text-sm text-gray-900">{c.name}</div>
                                         {c.address && <div className="text-xs text-gray-500">{c.address}</div>}
@@ -1195,12 +1193,12 @@ export default function EntitiesPage() {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
-                                      <EntityImageUploadButton
-                                        entityType="company"
-                                        entityId={c.id}
-                                        onUploaded={(url) => url && updateEntityImage('company', c.id, url, t.id)}
-                                        onProgressChange={onProgressChange(c.id)}
-                                      />
+                                      <Link
+                                        href={galleryManagementHref('company', c.id)}
+                                        className={galleryLinkClass}
+                                      >
+                                        <IconLabel icon={Images}>Gallery</IconLabel>
+                                      </Link>
                                       <EmployeeCsvUploadButton
                                         mode="child"
                                         entityType="company"
@@ -1214,19 +1212,19 @@ export default function EntitiesPage() {
                                       {canAddCompanyManager && (
                                         <button onClick={() => managerForId === c.id ? setManagerForId(null) : openManager(c.id)}
                                           className={`text-xs border px-2 py-1 rounded ${managerForId === c.id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
-                                          👤 {managerForId === c.id ? 'Cancel' : 'Add User'}
+                                          <IconLabel icon={UserPlus}>{managerForId === c.id ? 'Cancel' : 'Add User'}</IconLabel>
                                         </button>
                                       )}
                                       {canEditCompany && (
                                         <button onClick={() => openChainEditor(c.id)}
                                           className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-                                          {chainEditorId === c.id ? 'Close' : '⚙ Chain'}
+                                          {chainEditorId === c.id ? 'Close' : <IconLabel icon={GitBranch}>Chain</IconLabel>}
                                         </button>
                                       )}
                                       {canConfigureEntity && (
                                         <button onClick={() => openConfigEditor('company', c.id)}
                                           className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-                                          {isConfigOpen(configEditor, 'company', c.id) ? 'Close' : '⚙ Config'}
+                                          {isConfigOpen(configEditor, 'company', c.id) ? 'Close' : <IconLabel icon={Settings}>Config</IconLabel>}
                                         </button>
                                       )}
                                       {canDeleteCompany && (
@@ -1314,10 +1312,14 @@ export default function EntitiesPage() {
                     ) : (
                       <div className="flex items-center justify-between px-5 py-4 gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(o.id, 'org')}>
-                          <EntityAvatar name={o.name} imageUrl={o.image_url} uploadProgress={getProgress(o.id)} />
+                          <EntityAvatar name={o.name} imageUrl={o.image_url} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-gray-400">{isOpen ? '▾' : '▸'}</span>
+                              <span className="text-gray-400">
+                                {isOpen
+                                  ? <ChevronDown className="w-4 h-4" aria-hidden />
+                                  : <ChevronRight className="w-4 h-4" aria-hidden />}
+                              </span>
                               <div className="font-semibold text-gray-900">{o.name}</div>
                               <span className="text-xs bg-primary-muted text-primary px-2 py-0.5 rounded-full">
                                 {o.location_count} {o.location_count === 1 ? 'location' : 'locations'}
@@ -1328,7 +1330,6 @@ export default function EntitiesPage() {
                         </div>
                         <ParentActions
                           id={o.id} name={o.name} address={o.address} kind="org"
-                          onImageUploaded={(url) => url && updateEntityImage('org', o.id, url)}
                         />
                       </div>
                     )}
@@ -1403,7 +1404,7 @@ export default function EntitiesPage() {
                                 ) : (
                                   <div className="bg-white rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                                      <EntityAvatar name={l.name} imageUrl={l.image_url} size="sm" uploadProgress={getProgress(l.id)} />
+                                      <EntityAvatar name={l.name} imageUrl={l.image_url} size="sm" />
                                       <div className="min-w-0">
                                         <div className="font-medium text-sm text-gray-900">{l.name}</div>
                                         {l.address && <div className="text-xs text-gray-500">{l.address}</div>}
@@ -1416,12 +1417,12 @@ export default function EntitiesPage() {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
-                                      <EntityImageUploadButton
-                                        entityType="location"
-                                        entityId={l.id}
-                                        onUploaded={(url) => url && updateEntityImage('location', l.id, url, o.id)}
-                                        onProgressChange={onProgressChange(l.id)}
-                                      />
+                                      <Link
+                                        href={galleryManagementHref('location', l.id)}
+                                        className={galleryLinkClass}
+                                      >
+                                        <IconLabel icon={Images}>Gallery</IconLabel>
+                                      </Link>
                                       <EmployeeCsvUploadButton
                                         mode="child"
                                         entityType="location"
@@ -1435,19 +1436,19 @@ export default function EntitiesPage() {
                                       {canAddLocationManager && (
                                         <button onClick={() => managerForId === l.id ? setManagerForId(null) : openManager(l.id)}
                                           className={`text-xs border px-2 py-1 rounded ${managerForId === l.id ? 'bg-success-light text-success border-success-border' : 'text-success hover:bg-success-light border-success-border'}`}>
-                                          👤 {managerForId === l.id ? 'Cancel' : 'Add User'}
+                                          <IconLabel icon={UserPlus}>{managerForId === l.id ? 'Cancel' : 'Add User'}</IconLabel>
                                         </button>
                                       )}
                                       {canEditLocation && (
                                         <button onClick={() => openChainEditor(l.id)}
                                           className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-                                          {chainEditorId === l.id ? 'Close' : '⚙ Chain'}
+                                          {chainEditorId === l.id ? 'Close' : <IconLabel icon={GitBranch}>Chain</IconLabel>}
                                         </button>
                                       )}
                                       {canConfigureEntity && (
                                         <button onClick={() => openConfigEditor('location', l.id)}
                                           className="text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded">
-                                          {isConfigOpen(configEditor, 'location', l.id) ? 'Close' : '⚙ Config'}
+                                          {isConfigOpen(configEditor, 'location', l.id) ? 'Close' : <IconLabel icon={Settings}>Config</IconLabel>}
                                         </button>
                                       )}
                                       {canDeleteLocation && (

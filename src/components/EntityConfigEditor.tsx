@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 import { api } from '@/lib/api';
 import {
   type EntityConfig,
@@ -264,7 +265,9 @@ export default function EntityConfigEditor({
           <h3 className="text-base font-semibold text-gray-900">Admin Configuration</h3>
           <p className="text-xs text-gray-500 mt-0.5">{entityName}</p>
         </div>
-        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+        <button type="button" onClick={onCancel} className="text-gray-400 hover:text-gray-600 p-0.5" aria-label="Close">
+          <X className="w-4 h-4" aria-hidden />
+        </button>
       </div>
 
       {error && (

@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { mediaSrc } from '@/lib/api';
 import EntityAvatar from '@/components/EntityAvatar';
 import UploadProgressOverlay from '@/components/UploadProgressOverlay';
@@ -182,7 +183,7 @@ export default function EntityImageCarousel({
               className={`absolute left-3 top-1/2 -translate-y-1/2 z-10 rounded-full border shadow-sm opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity duration-300 flex items-center justify-center ${navBtnClass}`}
               aria-label="Previous image"
             >
-              ‹
+              <ChevronLeft className="w-5 h-5" aria-hidden />
             </button>
             <button
               type="button"
@@ -190,7 +191,7 @@ export default function EntityImageCarousel({
               className={`absolute right-3 top-1/2 -translate-y-1/2 z-10 rounded-full border shadow-sm opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity duration-300 flex items-center justify-center ${navBtnClass}`}
               aria-label="Next image"
             >
-              ›
+              <ChevronRight className="w-5 h-5" aria-hidden />
             </button>
             <div className={`absolute left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${hero ? 'bottom-20 sm:bottom-24' : 'bottom-3'}`}>
               {images.map((img, i) => (

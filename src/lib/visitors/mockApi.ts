@@ -12,6 +12,7 @@ import type {
   Visitor,
   VisitorEntityType,
   VisitorListParams,
+  VisitorExportParams,
   VisitorPagination,
   VisitorStatus,
 } from './types';
@@ -144,6 +145,13 @@ export const visitorsClient = {
     return { visitors: items, pagination };
   },
 
+  /** All records matching filters (no pagination) — for CSV export. */
+  async exportVisitors(params: VisitorExportParams = {}) {
+    await delay(80);
+    const visitors = filterVisitors(params);
+    return { visitors, total: visitors.length };
+  },
+
   async getVisitor(id: string) {
     await delay();
     const visitor = store.find(v => v.id === id);
@@ -161,6 +169,7 @@ export const visitorsClient = {
       entity_type: input.entity_type,
       entity_id: input.entity_id,
       full_name: input.full_name,
+      image_url: input.image_url ?? null,
       email: input.email ?? null,
       phone: input.phone ?? null,
       company_name: input.company_name ?? null,
@@ -168,6 +177,7 @@ export const visitorsClient = {
       id_number: input.id_number ?? null,
       purpose: input.purpose ?? null,
       host_name: input.host_name ?? null,
+      host_email: input.host_email ?? null,
       host_employee_id: input.host_employee_id ?? null,
       status: input.status ?? 'pending',
       scheduled_arrival: input.scheduled_arrival ?? null,
@@ -199,6 +209,8 @@ export const visitorsClient = {
       id_number: patch.id_number !== undefined ? (patch.id_number || null) : current.id_number,
       purpose: patch.purpose !== undefined ? (patch.purpose || null) : current.purpose,
       host_name: patch.host_name !== undefined ? (patch.host_name || null) : current.host_name,
+      host_email: patch.host_email !== undefined ? (patch.host_email || null) : current.host_email,
+      image_url: patch.image_url !== undefined ? (patch.image_url || null) : current.image_url,
       host_employee_id: patch.host_employee_id !== undefined ? (patch.host_employee_id ?? null) : current.host_employee_id,
       scheduled_arrival: patch.scheduled_arrival !== undefined ? (patch.scheduled_arrival ?? null) : current.scheduled_arrival,
       scheduled_departure: patch.scheduled_departure !== undefined ? (patch.scheduled_departure ?? null) : current.scheduled_departure,

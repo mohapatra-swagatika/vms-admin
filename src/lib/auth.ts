@@ -9,6 +9,7 @@ function notifyPermissionsChanged() {
 }
 
 export function saveAuth(token: string, user: object, permissions: string[], assignments: Assignment[] = []) {
+  clearStoredProfileImage();
   localStorage.setItem('vms_token', token);
   localStorage.setItem('vms_user', JSON.stringify(user));
   localStorage.setItem('vms_permissions', JSON.stringify(permissions));
@@ -21,12 +22,18 @@ export function clearAuth() {
   localStorage.removeItem('vms_user');
   localStorage.removeItem('vms_permissions');
   localStorage.removeItem('vms_assignments');
-  localStorage.removeItem('vms_profile_image_url');
-  localStorage.removeItem('vms_profile_image_v');
+  clearStoredProfileImage();
 }
 
 const PROFILE_IMAGE_URL_KEY = 'vms_profile_image_url';
 const PROFILE_IMAGE_V_KEY = 'vms_profile_image_v';
+
+export function clearStoredProfileImage(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(PROFILE_IMAGE_URL_KEY);
+  localStorage.removeItem(PROFILE_IMAGE_V_KEY);
+  window.dispatchEvent(new CustomEvent('vms_profile_image_updated', { detail: { url: null, version: 0 } }));
+}
 
 export function getStoredProfileImage(): { url: string | null; version: number } {
   if (typeof window === 'undefined') return { url: null, version: 0 };
@@ -132,9 +139,38 @@ export function canUploadSelfImage(): boolean {
   return can('image:upload_self');
 }
 
-/** Entities list — child entity images (companies, locations, etc.) */
+/** Entities list — child entity gallery images */
 export function canUploadChildEntityImage(): boolean {
   return can('image:upload_child');
+}
+
+/** Own scoped entity gallery — delete uploaded images */
+export function canDeleteSelfGalleryImage(): boolean {
+  return can('image:delete_upload_self');
+}
+
+/** Managed entity gallery — delete uploaded images */
+export function canDeleteChildGalleryImage(): boolean {
+  return can('image:delete_upload_child');
+}
+
+export function canDeleteGalleryImage(mode: 'self' | 'child'): boolean {
+  return mode === 'self' ? canDeleteSelfGalleryImage() : canDeleteChildGalleryImage();
+}
+
+export function canUploadGalleryImage(mode: 'self' | 'child'): boolean {
+  return mode === 'self' ? canUploadSelfImage() : canUploadChildEntityImage();
+}
+
+/** Whether the target entity is the logged-in user's own scope. */
+export function resolveGalleryMode(entityType: string, entityId: string): 'self' | 'child' {
+  const scoped = getScopedEntity();
+  if (scoped?.type === entityType && scoped.id === entityId) return 'self';
+  return 'child';
+}
+
+export function galleryManagementHref(entityType: string, entityId: string): string {
+  return `/dashboard/gallery?type=${encodeURIComponent(entityType)}&id=${encodeURIComponent(entityId)}`;
 }
 
 /** Dashboard — import employees for the user's own scoped entity */

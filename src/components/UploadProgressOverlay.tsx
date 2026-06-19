@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 export type UploadProgressVariant = 'compact' | 'avatar-lg' | 'panel';
 
 type Props = {
@@ -155,7 +157,7 @@ export function UploadButtonProgress({
 }: {
   uploading: boolean;
   progress: number;
-  idleLabel: string;
+  idleLabel: ReactNode;
 }) {
   if (!uploading) return <>{idleLabel}</>;
 

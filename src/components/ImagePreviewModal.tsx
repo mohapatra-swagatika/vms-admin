@@ -1,4 +1,4 @@
-'use client';
+import { X } from 'lucide-react';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -49,7 +49,7 @@ export default function ImagePreviewModal({ open, src, alt, onClose }: Props) {
         className="fixed top-4 right-4 z-[210] w-10 h-10 rounded-full bg-white text-gray-800 hover:bg-gray-100 shadow-lg flex items-center justify-center text-xl leading-none transition-colors"
         aria-label="Close"
       >
-        ×
+        <X className="w-5 h-5" aria-hidden />
       </button>
 
       <div className="relative z-10 flex flex-col items-center max-w-[min(100%,56rem)] w-full max-h-[90vh]">

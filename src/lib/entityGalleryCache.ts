@@ -25,3 +25,10 @@ export function writeEntityGalleryCache(type: string, id: string, data: EntityGa
     sessionStorage.setItem(cacheKey(type, id), JSON.stringify(data));
   } catch { /* storage full */ }
 }
+
+export function clearEntityGalleryCache(type: string, id: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.removeItem(cacheKey(type, id));
+  } catch { /* ignore */ }
+}

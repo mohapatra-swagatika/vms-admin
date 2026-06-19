@@ -2,6 +2,7 @@
 import { use, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle, Check, ChevronLeft, Clock, User } from 'lucide-react';
 import { api, profileImageSrc } from '@/lib/api';
 import { getUser } from '@/lib/auth';
 import ConfirmDialog from '@/components/ConfirmDialog';
@@ -208,8 +209,9 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
     <div className="p-8 max-w-4xl">
       {/* Breadcrumb + header */}
       <div className="mb-6">
-        <Link href="/dashboard/users" className="text-xs text-gray-500 hover:text-primary">
-          ← Back to Users
+        <Link href="/dashboard/users" className="text-xs text-gray-500 hover:text-primary inline-flex items-center gap-1">
+          <ChevronLeft className="w-3.5 h-3.5" aria-hidden />
+          Back to Users
         </Link>
         <div className="flex items-start justify-between mt-2">
           <div className="flex items-start gap-4">
@@ -239,8 +241,9 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div className="flex items-center gap-2">
             {isSelf ? (
-              <span className="text-xs text-warning bg-warning-light border border-warning-border px-3 py-1.5 rounded-lg">
-                👤 This is your account
+              <span className="text-xs text-warning bg-warning-light border border-warning-border px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                This is your account
               </span>
             ) : (
               <>
@@ -323,7 +326,10 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           <div className="mt-4 border-t border-gray-100 pt-4">
             {resetPwd ? (
               <div className="bg-success-light border border-success-border rounded-lg p-4">
-                <div className="text-sm font-semibold text-success mb-1">✓ Password reset successfully</div>
+                <div className="text-sm font-semibold text-success mb-1 flex items-center gap-1.5">
+                  <Check className="w-4 h-4 shrink-0" aria-hidden />
+                  Password reset successfully
+                </div>
                 <div className="text-xs text-success mb-2">Share this new password with the user. <strong>It will not be shown again.</strong></div>
                 <div className="bg-white border border-success-border rounded px-3 py-2 font-mono text-sm flex items-center justify-between">
                   <span>{resetPwd}</span>
@@ -452,8 +458,13 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                       <div className="text-xs text-gray-500">
                         {a.scope_type === 'global' ? 'Global' : `${a.scope_type} · ${scope || '(unknown)'}`}
                         {a.expires_at && (
-                          <span className={`ml-3 ${expired ? 'text-danger' : 'text-warning'}`}>
-                            {expired ? '⚠ Expired' : '⏱'} {new Date(a.expires_at).toLocaleString()}
+                          <span className={`ml-3 inline-flex items-center gap-1 ${expired ? 'text-danger' : 'text-warning'}`}>
+                            {expired ? (
+                              <><AlertTriangle className="w-3 h-3 shrink-0" aria-hidden /> Expired</>
+                            ) : (
+                              <><Clock className="w-3 h-3 shrink-0" aria-hidden /></>
+                            )}{' '}
+                            {new Date(a.expires_at).toLocaleString()}
                           </span>
                         )}
                       </div>

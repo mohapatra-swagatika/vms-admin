@@ -1,5 +1,7 @@
 'use client';
+import { AlertTriangle, CheckCircle2, X, XCircle } from 'lucide-react';
 import type { EmployeeCsvImportResult } from '@/lib/api';
+import { IconLabel } from '@/components/IconLabel';
 
 type Props = {
   result: EmployeeCsvImportResult;
@@ -10,6 +12,12 @@ type Props = {
 export default function EmployeeCsvImportResult({ result, onDismiss, className }: Props) {
   const hasErrors = result.errors.length > 0;
   const success = result.created_count > 0;
+
+  const statusLabel = success && !hasErrors
+    ? <IconLabel icon={CheckCircle2}>Import successful</IconLabel>
+    : success
+      ? <IconLabel icon={AlertTriangle}>Import completed with errors</IconLabel>
+      : <IconLabel icon={XCircle}>Import failed</IconLabel>;
 
   return (
     <div
@@ -26,7 +34,7 @@ export default function EmployeeCsvImportResult({ result, onDismiss, className }
           <div className={`text-sm font-semibold ${
             success && !hasErrors ? 'text-success' : success ? 'text-warning' : 'text-danger'
           }`}>
-            {success && !hasErrors ? '✓ Import successful' : success ? '⚠ Import completed with errors' : '✕ Import failed'}
+            {statusLabel}
           </div>
           <p className={`text-sm mt-0.5 ${
             success && !hasErrors ? 'text-success' : success ? 'text-warning' : 'text-danger'
@@ -38,10 +46,10 @@ export default function EmployeeCsvImportResult({ result, onDismiss, className }
           <button
             type="button"
             onClick={onDismiss}
-            className="text-gray-500 hover:text-gray-700 text-lg leading-none shrink-0"
+            className="text-gray-500 hover:text-gray-700 p-0.5 shrink-0"
             aria-label="Dismiss"
           >
-            ✕
+            <X className="w-4 h-4" aria-hidden />
           </button>
         )}
       </div>

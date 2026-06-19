@@ -1,6 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { AlertTriangle, CheckCircle2, X } from 'lucide-react';
 
 type Props = {
   message: string;
@@ -32,17 +33,19 @@ export default function FlashToast({ message, variant, onDismiss, durationMs = 6
       <div
         className={`pointer-events-auto flex items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg ${styles}`}
       >
-        <span className="text-base leading-none mt-0.5 shrink-0" aria-hidden>
-          {variant === 'error' ? '⚠️' : '✓'}
+        <span className="mt-0.5 shrink-0" aria-hidden>
+          {variant === 'error'
+            ? <AlertTriangle className="w-4 h-4" />
+            : <CheckCircle2 className="w-4 h-4" />}
         </span>
         <p className="flex-1 leading-snug">{message}</p>
         <button
           type="button"
           onClick={onDismiss}
-          className="shrink-0 opacity-80 hover:opacity-100 text-lg leading-none"
+          className="shrink-0 opacity-80 hover:opacity-100 p-0.5"
           aria-label="Dismiss"
         >
-          ×
+          <X className="w-4 h-4" aria-hidden />
         </button>
       </div>
     </div>,

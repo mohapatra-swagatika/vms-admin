@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, X, Zap } from 'lucide-react';
 
 export type ApprovalStep = {
   step: number;
@@ -85,7 +86,9 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
           <h3 className="text-base font-semibold text-gray-900">Approval Chain</h3>
           <p className="text-xs text-gray-500 mt-0.5">{entityName}</p>
         </div>
-        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+        <button type="button" onClick={onCancel} className="text-gray-400 hover:text-gray-600 p-0.5" aria-label="Close">
+          <X className="w-5 h-5" aria-hidden />
+        </button>
       </div>
 
       {error && (
@@ -100,7 +103,7 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
             <div className="text-xs text-warning mt-0.5 max-w-sm">
               When ON: a higher-level approver can approve in one step, automatically bypassing all lower steps.
               <br />
-              <span className="font-medium">Example:</span> Tower approves → Admin step skipped automatically.
+              <span className="font-medium">Example:</span> Tower approves, then Admin step skipped automatically.
             </div>
           </div>
           <button
@@ -121,8 +124,9 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
           </button>
         </div>
         {bypass && (
-          <div className="mt-2 text-xs text-warning bg-warning-light border border-warning-border rounded px-2 py-1">
-            ✓ Bypass is <strong>enabled</strong> — high-level approvals will automatically skip lower steps.
+          <div className="mt-2 text-xs text-warning bg-warning-light border border-warning-border rounded px-2 py-1 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" aria-hidden />
+            <span>Bypass is <strong>enabled</strong> — high-level approvals will automatically skip lower steps.</span>
           </div>
         )}
       </div>
@@ -176,15 +180,21 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
 
                 {/* Move up / down */}
                 <div className="flex gap-0.5">
-                  <button onClick={() => moveUp(idx)} disabled={idx === 0}
-                    className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs">▲</button>
-                  <button onClick={() => moveDown(idx)} disabled={idx === steps.length - 1}
-                    className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs">▼</button>
+                  <button type="button" onClick={() => moveUp(idx)} disabled={idx === 0}
+                    className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" aria-label="Move up">
+                    <ChevronUp className="w-4 h-4" aria-hidden />
+                  </button>
+                  <button type="button" onClick={() => moveDown(idx)} disabled={idx === steps.length - 1}
+                    className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" aria-label="Move down">
+                    <ChevronDown className="w-4 h-4" aria-hidden />
+                  </button>
                 </div>
 
                 {/* Remove */}
-                <button onClick={() => removeStep(idx)}
-                  className="text-danger hover:text-danger/80 text-sm px-1">✕</button>
+                <button type="button" onClick={() => removeStep(idx)}
+                  className="text-danger hover:text-danger/80 p-1" aria-label="Remove step">
+                  <X className="w-4 h-4" aria-hidden />
+                </button>
               </div>
             ))}
           </div>
@@ -199,18 +209,21 @@ export default function ApprovalChainEditor({ entityName, initial, onSave, onCan
             <span className="bg-success-light text-success px-2 py-0.5 rounded-full">Visitor submits</span>
             {steps.map((s, i) => (
               <span key={i} className="flex items-center gap-1">
-                <span className="text-gray-400">→</span>
+                <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
                 <span className="bg-primary-muted text-primary border border-primary-border px-2 py-0.5 rounded-full">
                   Step {s.step}: L{s.level}{s.label ? ` (${s.label})` : ''}
                 </span>
               </span>
             ))}
-            <span className="text-gray-400">→</span>
-            <span className="bg-success-light text-success px-2 py-0.5 rounded-full">Approved ✓</span>
+            <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+            <span className="bg-success-light text-success px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+              Approved <CheckCircle2 className="w-3 h-3" aria-hidden />
+            </span>
           </div>
           {bypass && steps.length > 1 && (
-            <div className="mt-2 text-warning">
-              ⚡ Bypass ON — L{Math.max(...steps.map(s => s.level))} approval skips all lower steps
+            <div className="mt-2 text-warning flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 shrink-0" aria-hidden />
+              Bypass ON — L{Math.max(...steps.map(s => s.level))} approval skips all lower steps
             </div>
           )}
         </div>

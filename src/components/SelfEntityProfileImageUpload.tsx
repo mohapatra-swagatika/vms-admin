@@ -1,38 +1,44 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Camera } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import { api, validateImageFile } from '@/lib/api';
-import { canUploadSelfImage, getUser, setStoredProfileImage } from '@/lib/auth';
+import { canUploadSelfImage, getScopedEntity } from '@/lib/auth';
 import { IconLabel } from '@/components/IconLabel';
 import { UploadButtonProgress } from '@/components/UploadProgressOverlay';
 
 type Props = {
-  onUploaded?: (profileImageUrl: string) => void;
+  onUploaded?: (imageUrl: string) => void;
   onProgressChange?: (progress: number | null) => void;
   className?: string;
 };
 
 const defaultClass =
-  'text-xs text-primary hover:bg-primary-muted border border-primary-border px-2 py-1 rounded transition-colors disabled:opacity-50';
+  'text-xs text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50';
 
-const profileIdleLabel = <IconLabel icon={Camera}>Upload Image</IconLabel>;
+const profileIdleLabel = <IconLabel icon={ImageIcon}>Entity Profile</IconLabel>;
 
-export default function SelfProfileImageUpload({ onUploaded, onProgressChange, className }: Props) {
+/** Upload profile image for the logged-in user's own scoped entity (dashboard only). */
+export default function SelfEntityProfileImageUpload({
+  onUploaded,
+  onProgressChange,
+  className,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [allowed, setAllowed] = useState(false);
-  const [ready, setReady] = useState(false);
+  const scopedEntity = getScopedEntity();
 
   useEffect(() => {
-    function recheck() { setAllowed(canUploadSelfImage()); }
+    function recheck() { setAllowed(canUploadSelfImage() && !!getScopedEntity()); }
     recheck();
-    setReady(true);
     window.addEventListener('vms_permissions_updated', recheck);
     return () => window.removeEventListener('vms_permissions_updated', recheck);
   }, []);
 
-  if (!ready || !allowed) return null;
+  if (!allowed || !scopedEntity) return null;
+
+  const { type: entityType, id: entityId } = scopedEntity;
 
   function reportProgress(value: number | null) {
     if (value === null) {
@@ -45,18 +51,25 @@ export default function SelfProfileImageUpload({ onUploaded, onProgressChange, c
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    const userId = getUser()?.id;
-    if (!file || !userId) return;
+    if (!file) return;
+
     const validationError = validateImageFile(file);
-    if (validationError) { alert(validationError); return; }
+    if (validationError) {
+      alert(validationError);
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
     setUploading(true);
     reportProgress(0);
     try {
-      const result = await api.uploadProfileImage(userId, file, { onProgress: reportProgress });
-      setStoredProfileImage(result.profile_image_url);
-      onUploaded?.(result.profile_image_url);
+      const result = await api.uploadEntityProfileImage(entityType, entityId, file, {
+        onProgress: reportProgress,
+      });
+      if (!result.image_url) throw new Error('Upload succeeded but no image URL was returned');
+      onUploaded?.(result.image_url);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to upload image');
+      alert(err instanceof Error ? err.message : 'Failed to upload profile image');
     } finally {
       setUploading(false);
       reportProgress(null);
@@ -78,6 +91,7 @@ export default function SelfProfileImageUpload({ onUploaded, onProgressChange, c
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
         className={className ?? defaultClass}
+        title="Upload profile image for your entity"
       >
         {uploading ? (
           <UploadButtonProgress uploading progress={progress} idleLabel={profileIdleLabel} />

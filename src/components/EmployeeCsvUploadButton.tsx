@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { FileUp } from 'lucide-react';
 import {
   api,
   validateEmployeeCsvFile,
@@ -8,6 +9,7 @@ import {
 } from '@/lib/api';
 import { canUploadChildEmployeeCsv, canUploadSelfEmployeeCsv } from '@/lib/auth';
 import EmployeeCsvImportResult from '@/components/EmployeeCsvImportResult';
+import { IconLabel } from '@/components/IconLabel';
 
 export type EmployeeCsvEntityType = 'tower' | 'company' | 'organization' | 'location';
 
@@ -128,7 +130,7 @@ export default function EmployeeCsvUploadButton({
           className={className ?? defaultClass}
           title="Upload a CSV file to import employees"
         >
-          {uploading ? 'Importing…' : '📄 Upload CSV'}
+          {uploading ? 'Importing…' : <IconLabel icon={FileUp}>Upload CSV</IconLabel>}
         </button>
       </div>
 

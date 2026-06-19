@@ -4,6 +4,7 @@ export type {
   VisitorStatus,
   VisitorIdType,
   VisitorListParams,
+  VisitorExportParams,
   VisitorPagination,
   CreateVisitorInput,
   UpdateVisitorInput,
@@ -17,3 +18,4 @@ export {
 } from './constants';
 
 export { visitorsClient, remapMockVisitorsToEntities } from './mockApi';
+export { downloadVisitorsCsv, visitorsToCsv } from './exportCsv';

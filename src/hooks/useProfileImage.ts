@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { getStoredProfileImage, getUser, setStoredProfileImage } from '@/lib/auth';
+import { clearStoredProfileImage, getStoredProfileImage, getUser, setStoredProfileImage } from '@/lib/auth';
 
 /** Shared profile image state for header, dashboard, and upload components. */
 export function useProfileImage() {
@@ -24,15 +24,24 @@ export function useProfileImage() {
     api.getUser(u.id)
       .then((data: { profile_image_url?: string | null }) => {
         const apiUrl = data.profile_image_url ?? null;
-        if (!apiUrl) return;
+        if (!apiUrl) {
+          clearStoredProfileImage();
+          apply(null, 0);
+          return;
+        }
         // Prefer a fresh signed URL from the API (stored URLs expire).
         apply(apiUrl, Date.now());
+        setStoredProfileImage(apiUrl);
       })
       .catch(() => { /* use cached value */ });
 
     function onUpdate(e: Event) {
-      const detail = (e as CustomEvent<{ url: string; version: number }>).detail;
+      const detail = (e as CustomEvent<{ url: string | null; version: number }>).detail;
       if (detail?.url) apply(detail.url, detail.version);
+      else {
+        clearStoredProfileImage();
+        apply(null, 0);
+      }
     }
     window.addEventListener('vms_profile_image_updated', onUpdate);
     return () => window.removeEventListener('vms_profile_image_updated', onUpdate);

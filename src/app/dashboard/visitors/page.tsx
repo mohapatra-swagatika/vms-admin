@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Download, Search } from 'lucide-react';
 import { api } from '@/lib/api';
 import {
   canCreateVisitor,
@@ -14,6 +15,7 @@ import {
 import {
   visitorsClient,
   remapMockVisitorsToEntities,
+  downloadVisitorsCsv,
   ENTITY_TYPE_LABELS,
   VISITOR_STATUS_LABELS,
   VISITOR_STATUS_STYLES,
@@ -21,9 +23,11 @@ import {
   type Visitor,
   type VisitorStatus,
   type VisitorIdType,
+  type VisitorListParams,
 } from '@/lib/visitors';
 import Pagination from '@/components/Pagination';
 import FlashToast from '@/components/FlashToast';
+import EntityAvatar from '@/components/EntityAvatar';
 
 type EntityOption = { id: string; name: string; type: ScopedEntityType };
 type EntityTypeFilter = '' | ScopedEntityType;
@@ -52,6 +56,7 @@ export default function VisitorsPage() {
   const [filterEntityId, setFilterEntityId] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
+  const [exporting, setExporting] = useState(false);
 
   const [entityOptions, setEntityOptions] = useState<EntityOption[]>([]);
   const [visibleEntityTypes, setVisibleEntityTypes] = useState<ScopedEntityType[]>([]);
@@ -109,31 +114,32 @@ export default function VisitorsPage() {
     } catch { /* non-fatal for mock module */ }
   }, []);
 
+  const buildListParams = useCallback((): VisitorListParams => {
+    const params: VisitorListParams = {
+      search: search || undefined,
+    };
+    if (filterEntityType) {
+      params.entity_type = filterEntityType;
+      if (filterEntityId) {
+        const selected = entityOptions.find(e => e.id === filterEntityId);
+        if (selected) {
+          params.entity_type = selected.type;
+          params.entity_id = selected.id;
+        } else {
+          params.entity_id = filterEntityId;
+        }
+      }
+    }
+    if (filterStatus) params.status = filterStatus;
+    return params;
+  }, [search, filterEntityType, filterEntityId, filterStatus, entityOptions]);
+
   const load = useCallback(async () => {
     if (!mounted || !canReadVisitors()) return;
     setLoading(true);
     setError('');
     try {
-      const params: Parameters<typeof visitorsClient.listVisitors>[0] = {
-        page,
-        limit,
-        search: search || undefined,
-      };
-      if (filterEntityType) {
-        params.entity_type = filterEntityType;
-        if (filterEntityId) {
-          const selected = entityOptions.find(e => e.id === filterEntityId);
-          if (selected) {
-            params.entity_type = selected.type;
-            params.entity_id = selected.id;
-          } else {
-            params.entity_id = filterEntityId;
-          }
-        }
-      }
-      if (filterStatus) params.status = filterStatus;
-
-      const data = await visitorsClient.listVisitors(params);
+      const data = await visitorsClient.listVisitors({ ...buildListParams(), page, limit });
       setVisitors(data.visitors ?? []);
       setPagination(data.pagination ?? { page: 1, limit: 20, total: 0, total_pages: 0 });
     } catch (err) {
@@ -141,7 +147,26 @@ export default function VisitorsPage() {
     } finally {
       setLoading(false);
     }
-  }, [mounted, entityOptions, page, limit, search, filterStatus, filterEntityType, filterEntityId]);
+  }, [mounted, buildListParams, page, limit]);
+
+  async function handleExport() {
+    setError('');
+    setSuccess('');
+    setExporting(true);
+    try {
+      const { visitors: rows, total } = await visitorsClient.exportVisitors(buildListParams());
+      if (!total) {
+        setError('No visitors match the current filters.');
+        return;
+      }
+      downloadVisitorsCsv(rows);
+      setSuccess(`Exported ${total} visitor${total === 1 ? '' : 's'}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export visitors');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   useEffect(() => {
     setMounted(true);
@@ -242,20 +267,38 @@ export default function VisitorsPage() {
             {pagination.total} visitor{pagination.total === 1 ? '' : 's'} total
           </p>
         </div>
-        {mounted && canCreateVisitor() && (
-          <button
-            type="button"
-            onClick={() => setShowForm(!showForm)}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors"
-          >
-            {showForm ? 'Cancel' : '+ Register Visitor'}
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {mounted && canReadVisitors() && (
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={exporting || loading}
+              className="btn-secondary text-sm px-4 py-2 rounded-lg disabled:opacity-50"
+              title="Download all visitors matching the current filters"
+            >
+              {exporting ? 'Exporting…' : (
+                <span className="inline-flex items-center gap-1.5">
+                  <Download className="w-4 h-4" aria-hidden />
+                  Export CSV
+                </span>
+              )}
+            </button>
+          )}
+          {mounted && canCreateVisitor() && (
+            <button
+              type="button"
+              onClick={() => setShowForm(!showForm)}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors"
+            >
+              {showForm ? 'Cancel' : '+ Register Visitor'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden />
           <input
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
@@ -435,8 +478,13 @@ export default function VisitorsPage() {
                   className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
                 >
                   <td className="px-4 py-3">
-                    <div className="font-medium text-gray-900">{v.full_name}</div>
-                    <div className="text-xs text-gray-500">{v.company_name || v.email || '—'}</div>
+                    <div className="flex items-center gap-3">
+                      <EntityAvatar name={v.full_name} imageUrl={v.image_url} size="sm" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900">{v.full_name}</div>
+                        <div className="text-xs text-gray-500 truncate">{v.email || v.phone || '—'}</div>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-gray-600">{v.host_name || '—'}</td>
                   <td className="px-4 py-3 text-gray-600">

@@ -243,7 +243,40 @@ export const api = {
     rejectIfUnauthorized(path, { status }, data);
     if (status !== 200 && status !== 201) throw new Error(data.error || 'Upload failed');
     options?.onProgress?.(100);
-    return data;
+    return data as {
+      image_urls?: string[];
+      uploaded_count?: number;
+      total_images?: number;
+    };
+  },
+
+  uploadEntityProfileImage: async (
+    entityType: string,
+    entityId: string,
+    file: File,
+    options?: { onProgress?: UploadProgressHandler },
+  ) => {
+    const pathSegment: Record<string, string> = {
+      tower: 'towers', company: 'companies', organization: 'organizations', location: 'locations',
+    };
+    const segment = pathSegment[entityType];
+    if (!segment) throw new Error(`Unknown entity type: ${entityType}`);
+
+    const path = `/entities/${segment}/${entityId}/profile-image`;
+    const formData = new FormData();
+    formData.append('image', file);
+    const { status, text } = await uploadFormData(path, formData, { onProgress: options?.onProgress });
+    let data: { error?: string; image_url?: string; entity?: object } = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(text || 'Upload failed');
+    }
+    rejectIfUnauthorized(path, { status }, data);
+    if (status !== 200 && status !== 201) throw new Error(data.error || 'Upload failed');
+    options?.onProgress?.(100);
+    if (!data.image_url) throw new Error('Upload succeeded but no image URL was returned');
+    return data as { image_url: string; entity?: object };
   },
 
   // Entities
@@ -316,6 +349,20 @@ export const api = {
     if (!path) throw new Error(`Unknown entity type: ${entityType}`);
     return apiFetch(`/entities/${path}/${entityId}/images`);
   },
+
+  deleteEntityGalleryImage: (
+    entityType: string,
+    entityId: string,
+    imageId: string,
+  ): Promise<{ message: string; id: string }> => {
+    const segment: Record<string, string> = {
+      tower: 'towers', company: 'companies', organization: 'organizations', location: 'locations',
+    };
+    const path = segment[entityType];
+    if (!path) throw new Error(`Unknown entity type: ${entityType}`);
+    return apiFetch(`/entities/${path}/${entityId}/images/${imageId}`, { method: 'DELETE' });
+  },
+
   getTowers:          ()                            => apiFetch('/entities/towers'),
   getTower:           (id: string)                  => apiFetch(`/entities/towers/${id}`),
   createTower:        (body: object)                => apiFetch('/entities/towers', { method: 'POST', body: JSON.stringify(body) }),

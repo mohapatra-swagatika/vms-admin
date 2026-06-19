@@ -1,6 +1,7 @@
 'use client';
 import { use, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api, type Employee } from '@/lib/api';
 import { canDeleteEmployee, canUpdateEmployee } from '@/lib/auth';
@@ -108,7 +109,10 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   if (!employee) {
     return (
       <div className="p-8">
-        <Link href="/dashboard/employees" className="text-sm text-primary hover:underline">← Back to Employees</Link>
+        <Link href="/dashboard/employees" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
+          <ChevronLeft className="w-3.5 h-3.5" aria-hidden />
+          Back to Employees
+        </Link>
         <p className="mt-4 text-danger">{error || 'Employee not found'}</p>
       </div>
     );
@@ -116,7 +120,10 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="p-8 max-w-4xl">
-      <Link href="/dashboard/employees" className="text-sm text-primary hover:underline">← Back to Employees</Link>
+      <Link href="/dashboard/employees" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
+        <ChevronLeft className="w-3.5 h-3.5" aria-hidden />
+        Back to Employees
+      </Link>
 
       <div className="mt-4 mb-6 flex items-start justify-between gap-4">
         <div>

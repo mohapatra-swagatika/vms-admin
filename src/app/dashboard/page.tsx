@@ -10,17 +10,19 @@ import {
   getTopScope,
   getScopedEntity,
   getScopedEntityLabel,
+  galleryManagementHref,
   isSupport,
   type ScopedEntityType,
 } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { readEntityGalleryCache, writeEntityGalleryCache } from '@/lib/entityGalleryCache';
 import EntityImageCarousel, { type EntityImage } from '@/components/EntityImageCarousel';
-import EntityImageUploadButton from '@/components/EntityImageUploadButton';
+import SelfEntityProfileImageUpload from '@/components/SelfEntityProfileImageUpload';
 import EmployeeCsvUploadButton from '@/components/EmployeeCsvUploadButton';
 import {
   Building,
   Building2,
+  ChevronRight,
   Contact,
   KeyRound,
   MapPin,
@@ -105,7 +107,6 @@ export default function DashboardPage() {
   const [scopedEntity, setScopedEntity] = useState<ReturnType<typeof getScopedEntity>>(null);
   const [entityImages, setEntityImages] = useState<EntityImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
-  const [entityUploadProgress, setEntityUploadProgress] = useState<number | null>(null);
   const [today, setToday] = useState('');
 
   const loadEntityGallery = useCallback(async (entity: NonNullable<ReturnType<typeof getScopedEntity>>) => {
@@ -250,7 +251,6 @@ export default function DashboardPage() {
               entityName={scopedEntityName || getScopedEntityLabel(scopedEntity.type)}
               images={entityImages}
               loading={imagesLoading}
-              uploadProgress={entityUploadProgress}
               hero
               autoPlay
               overlay={(
@@ -279,15 +279,16 @@ export default function DashboardPage() {
                       className="inline-flex items-center gap-1 text-xs font-medium text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
                     >
                       Manage entity
-                      <span aria-hidden>→</span>
+                      <ChevronRight className="w-3.5 h-3.5 shrink-0" aria-hidden />
                     </Link>
-                    <EntityImageUploadButton
-                      entityType={scopedEntity.type}
-                      entityId={scopedEntity.id}
-                      onUploaded={() => loadEntityGallery(scopedEntity)}
-                      onProgressChange={setEntityUploadProgress}
-                      className="text-xs text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                    />
+                    <Link
+                      href={galleryManagementHref(scopedEntity.type, scopedEntity.id)}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Manage gallery
+                      <ChevronRight className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                    </Link>
+                    <SelfEntityProfileImageUpload />
                   </div>
                 </div>
               )}
@@ -362,8 +363,8 @@ export default function DashboardPage() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <Icon className="w-5 h-5 text-gray-500 opacity-80 group-hover:scale-110 transition-transform" aria-hidden />
-                        <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity">
-                          View →
+                        <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-0.5">
+                          View <ChevronRight className="w-3 h-3" aria-hidden />
                         </span>
                       </div>
                       <div className="mt-2 text-2xl font-bold text-gray-900 tabular-nums">{value}</div>

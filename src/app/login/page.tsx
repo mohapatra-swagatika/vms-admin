@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { saveAuth } from '@/lib/auth';
 
@@ -49,7 +50,8 @@ export default function LoginPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Sign in to your account</h2>
           {info && (
             <div className="mb-4 bg-warning-light border border-warning-border text-warning text-sm px-3 py-2 rounded-lg flex items-center gap-2">
-              <span>⚠️</span> {info}
+              <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden />
+              {info}
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">

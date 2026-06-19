@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 
 type Props = {
   label: string;
@@ -225,7 +226,7 @@ export default function PermissionMultiSelect({
                 className="opacity-60 hover:opacity-100"
                 aria-label={`Remove ${perm}`}
               >
-                ×
+                <X className="w-3 h-3" aria-hidden />
               </button>
             </span>
           ))}

@@ -1,5 +1,6 @@
 'use client';
 import { Fragment, useState, useEffect, useCallback } from 'react';
+import { Check, Search, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import PermissionMultiSelect from '@/components/PermissionMultiSelect';
 import ConfirmDialog from '@/components/ConfirmDialog';
@@ -211,7 +212,7 @@ export default function RolesPage() {
       {/* Search + filter bar */}
       <div className="flex items-center gap-3 mb-5">
         <div className="relative flex-1 max-w-sm">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden />
           <input
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
@@ -219,8 +220,10 @@ export default function RolesPage() {
             className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
           {searchInput && (
-            <button onClick={() => setSearchInput('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
+            <button type="button" onClick={() => setSearchInput('')} aria-label="Clear search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5">
+              <X className="w-3.5 h-3.5" aria-hidden />
+            </button>
           )}
         </div>
 
@@ -361,12 +364,14 @@ export default function RolesPage() {
                             </span>
                           </td>
                           <td className="px-5 py-3.5">
-                            <span className="text-xs text-success bg-success-light px-2 py-0.5 rounded-full mr-1">
-                              ✓ {allowCount} allow
+                            <span className="text-xs text-success bg-success-light px-2 py-0.5 rounded-full mr-1 inline-flex items-center gap-1">
+                              <Check className="w-3 h-3" aria-hidden />
+                              {allowCount} allow
                             </span>
                             {denyCount > 0 && (
-                              <span className="text-xs text-danger bg-danger-light px-2 py-0.5 rounded-full">
-                                ✕ {denyCount} deny
+                              <span className="text-xs text-danger bg-danger-light px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <X className="w-3 h-3" aria-hidden />
+                                {denyCount} deny
                               </span>
                             )}
                           </td>
@@ -382,7 +387,10 @@ export default function RolesPage() {
                             <td colSpan={4} className="px-5 py-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <div className="text-xs font-semibold text-success mb-2">✓ Allowed Actions ({allowCount})</div>
+                                  <div className="text-xs font-semibold text-success mb-2 flex items-center gap-1">
+                                    <Check className="w-3.5 h-3.5" aria-hidden />
+                                    Allowed Actions ({allowCount})
+                                  </div>
                                   <div className="flex flex-wrap gap-1">
                                     {(r.permissions?.actions ?? []).map(a => (
                                       <span key={a} className="text-xs bg-success-light text-success px-2 py-0.5 rounded font-mono border border-success-border">{a}</span>
@@ -391,7 +399,10 @@ export default function RolesPage() {
                                   </div>
                                 </div>
                                 <div>
-                                  <div className="text-xs font-semibold text-danger mb-2">✕ Denied Actions (not_actions) ({denyCount})</div>
+                                  <div className="text-xs font-semibold text-danger mb-2 flex items-center gap-1">
+                                    <X className="w-3.5 h-3.5" aria-hidden />
+                                    Denied Actions (not_actions) ({denyCount})
+                                  </div>
                                   <div className="flex flex-wrap gap-1">
                                     {(r.permissions?.not_actions ?? []).map(a => (
                                       <span key={a} className="text-xs bg-danger-light text-danger px-2 py-0.5 rounded font-mono border border-danger-border">{a}</span>
@@ -461,8 +472,16 @@ export default function RolesPage() {
                                 : <span className="text-xs text-gray-400">—</span>}
                             </td>
                             <td className="px-5 py-3.5">
-                              <span className="text-xs text-success bg-success-light px-2 py-0.5 rounded-full mr-1">✓ {allowCount}</span>
-                              {denyCount > 0 && <span className="text-xs text-danger bg-danger-light px-2 py-0.5 rounded-full">✕ {denyCount}</span>}
+                              <span className="text-xs text-success bg-success-light px-2 py-0.5 rounded-full mr-1 inline-flex items-center gap-1">
+                                <Check className="w-3 h-3" aria-hidden />
+                                {allowCount}
+                              </span>
+                              {denyCount > 0 && (
+                                <span className="text-xs text-danger bg-danger-light px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                  <X className="w-3 h-3" aria-hidden />
+                                  {denyCount}
+                                </span>
+                              )}
                               {r.user_count > 0 && (
                                 <span className="ml-1 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                                   {r.user_count} user{r.user_count > 1 ? 's' : ''}
@@ -544,7 +563,10 @@ export default function RolesPage() {
                               <td colSpan={5} className="px-5 py-4">
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <div className="text-xs font-semibold text-success mb-2">✓ Allowed ({allowCount})</div>
+                                    <div className="text-xs font-semibold text-success mb-2 flex items-center gap-1">
+                                      <Check className="w-3.5 h-3.5" aria-hidden />
+                                      Allowed ({allowCount})
+                                    </div>
                                     <div className="flex flex-wrap gap-1">
                                       {(r.permissions?.actions ?? []).map(a => (
                                         <span key={a} className="text-xs bg-success-light text-success px-2 py-0.5 rounded font-mono border border-success-border">{a}</span>
@@ -553,7 +575,10 @@ export default function RolesPage() {
                                     </div>
                                   </div>
                                   <div>
-                                    <div className="text-xs font-semibold text-danger mb-2">✕ Denied ({denyCount})</div>
+                                    <div className="text-xs font-semibold text-danger mb-2 flex items-center gap-1">
+                                      <X className="w-3.5 h-3.5" aria-hidden />
+                                      Denied ({denyCount})
+                                    </div>
                                     <div className="flex flex-wrap gap-1">
                                       {(r.permissions?.not_actions ?? []).map(a => (
                                         <span key={a} className="text-xs bg-danger-light text-danger px-2 py-0.5 rounded font-mono border border-danger-border">{a}</span>

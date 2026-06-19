@@ -1,6 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 
 export type ConfirmDialogProps = {
   open: boolean;
@@ -61,9 +62,9 @@ export default function ConfirmDialog({
           <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-4 ${
             destructive ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
           }`}>
-            <span className="text-xl leading-none" aria-hidden>
-              {destructive ? '🗑' : '⚠️'}
-            </span>
+            {destructive
+              ? <Trash2 className="w-5 h-5" aria-hidden />
+              : <AlertTriangle className="w-5 h-5" aria-hidden />}
           </div>
           <h2 id="confirm-dialog-title" className="text-lg font-semibold text-gray-900">
             {title}

@@ -2,13 +2,7 @@
 
 export type VisitorEntityType = 'tower' | 'company' | 'organization' | 'location';
 
-export type VisitorStatus =
-  | 'pending'
-  | 'approved'
-  | 'checked_in'
-  | 'checked_out'
-  | 'cancelled'
-  | 'rejected';
+export type VisitorStatus = 'pending' | 'approved' | 'rejected';
 
 export type VisitorIdType = 'passport' | 'national_id' | 'driving_license' | 'other';
 
@@ -18,6 +12,7 @@ export type Visitor = {
   entity_id: string;
   entity_name?: string;
   full_name: string;
+  image_url: string | null;
   email: string | null;
   phone: string | null;
   company_name: string | null;
@@ -25,6 +20,7 @@ export type Visitor = {
   id_number: string | null;
   purpose: string | null;
   host_name: string | null;
+  host_email: string | null;
   host_employee_id: string | null;
   status: VisitorStatus;
   scheduled_arrival: string | null;
@@ -45,6 +41,8 @@ export type VisitorListParams = {
   limit?: number;
 };
 
+export type VisitorExportParams = Omit<VisitorListParams, 'page' | 'limit'>;
+
 export type VisitorPagination = {
   page: number;
   limit: number;
@@ -56,6 +54,7 @@ export type CreateVisitorInput = {
   entity_type: VisitorEntityType;
   entity_id: string;
   full_name: string;
+  image_url?: string | null;
   email?: string;
   phone?: string;
   company_name?: string;
@@ -63,6 +62,7 @@ export type CreateVisitorInput = {
   id_number?: string;
   purpose?: string;
   host_name?: string;
+  host_email?: string;
   host_employee_id?: string;
   status?: VisitorStatus;
   scheduled_arrival?: string;
@@ -72,6 +72,7 @@ export type CreateVisitorInput = {
 
 export type UpdateVisitorInput = Partial<{
   full_name: string;
+  image_url: string | null;
   email: string | null;
   phone: string | null;
   company_name: string | null;
@@ -79,6 +80,7 @@ export type UpdateVisitorInput = Partial<{
   id_number: string | null;
   purpose: string | null;
   host_name: string | null;
+  host_email: string | null;
   host_employee_id: string | null;
   status: VisitorStatus;
   scheduled_arrival: string | null;

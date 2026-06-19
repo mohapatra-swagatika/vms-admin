@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
 import { api, type Employee } from '@/lib/api';
 import {
   canCreateEmployee, canReadEmployees, getScopedEntity, getTopScope, isSupport,
@@ -244,7 +245,7 @@ export default function EmployeesPage() {
 
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden />
           <input
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
